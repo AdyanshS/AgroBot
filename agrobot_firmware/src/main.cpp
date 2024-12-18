@@ -1,28 +1,42 @@
 #include <Arduino.h>
+#include <ESP32Encoder.h>
 
-#define dir_1 5   //d5
-#define pwm_1 18  //d18
-#define dir_2 4
-#define pwm_2 3
+// INclude esp dsp
+
+// #define dir_1 5   //d5
+// #define pwm_1 18  //d18
+// #define dir_2 4
+// #define pwm_2 3
 
 
+// #define Enc1Pin1 14
+// #define Enc1Pin2 27 
+
+// #define Enc1Pin1 26
+// #define Enc1Pin2 25
+
+// #define Enc1Pin1 13
+// #define Enc1Pin2 12 
+
+#define Enc1Pin1 33
+#define Enc1Pin2 32
+
+ESP32Encoder encoder1;
 
 void setup() {
-  pinMode(pwm_1,OUTPUT);
-  pinMode(dir_1,OUTPUT);
 
+  encoder1.attachFullQuad(Enc1Pin1, Enc1Pin2);
+  encoder1.setCount(0);
   Serial.begin(115200);
 
 }
 
 void loop() {
 
-  for (int i = 0; i < 255; i++)
-  {
-    analogWrite(pwm_1, i);
-    digitalWrite(dir_1, HIGH);
-    Serial.println(i);
-    delay(100);
-  }
-
+  long newPos = encoder1.getCount();
+  Serial.println(newPos);
+  // Serial.println(  encoder1.isAttached());
 }
+
+
+
