@@ -1,0 +1,4 @@
+int64 encoder_1_pulse
+int64 encoder_2_pulse
+int64 encoder_3_pulse
+int64 encoder_4_pulse
