@@ -9,7 +9,8 @@
 
 #include <ESP32Encoder.h>
 #include "pin_map.hpp"
-#include "motor_driver.hpp"
+// #include "motor_driver.hpp"
+#include "motor_driver_mcpwm.hpp"
 #include <agrobot_interfaces/msg/encoder_pulses.h>
 #include <agrobot_interfaces/msg/motor_pw_ms.h>
 
@@ -85,10 +86,10 @@ ESP32Encoder encoder2;
 ESP32Encoder encoder3;
 ESP32Encoder encoder4;
 
-MotorDriver motor1(MotorDriver1_DIR2, MotorDriver1_PWM2, 255, 25, 0, &encoder1,0);
-MotorDriver motor2(MotorDriver1_DIR1, MotorDriver1_PWM1, 255, 25, 1, &encoder2,0);
-MotorDriver motor3(MotorDriver2_DIR2, MotorDriver2_PWM2, 255, 25, 2, &encoder3,-20);
-MotorDriver motor4(MotorDriver2_DIR1, MotorDriver2_PWM1, 255, 25, 3, &encoder4,0);
+// MotorDriver motor1(MotorDriver1_DIR2, MotorDriver1_PWM2, 255, 25, 0, &encoder1,0);
+// MotorDriver motor2(MotorDriver1_DIR1, MotorDriver1_PWM1, 255, 25, 1, &encoder2,0);
+// MotorDriver motor3(MotorDriver2_DIR2, MotorDriver2_PWM2, 255, 25, 2, &encoder3,-20);
+// MotorDriver motor4(MotorDriver2_DIR1, MotorDriver2_PWM1, 255, 25, 3, &encoder4,0);
 
 void encoder_pulses_callback(rcl_timer_t *timer, int64_t last_call_time)
 {
@@ -111,10 +112,16 @@ void motor_pwm_callback(const void *msgin)
 {
   const agrobot_interfaces__msg__MotorPWMs *msg_motor_pwm = (const agrobot_interfaces__msg__MotorPWMs *)msgin;
 
-  motor1.runMotor(msg_motor_pwm->motor1pwm);
-  motor2.runMotor(msg_motor_pwm->motor2pwm);
-  motor3.runMotor(msg_motor_pwm->motor3pwm);
-  motor4.runMotor(msg_motor_pwm->motor4pwm);
+  // motor1.runMotor(msg_motor_pwm->motor1pwm);
+  // motor2.runMotor(msg_motor_pwm->motor2pwm);
+  // motor3.runMotor(msg_motor_pwm->motor3pwm);
+  // motor4.runMotor(msg_motor_pwm->motor4pwm);
+
+  motorSetSpeed(1, msg_motor_pwm->motor1pwm);
+  motorSetSpeed(2, msg_motor_pwm->motor2pwm);
+  motorSetSpeed(3, msg_motor_pwm->motor3pwm);
+  motorSetSpeed(4, msg_motor_pwm->motor4pwm);
+  
 }
 
 bool create_entities()
@@ -193,10 +200,12 @@ void setup_hardware()
   encoder4.attachFullQuad(ENC4_A, ENC4_B);
   encoder4.setCount(0);
 
-  motor1.setup();
-  motor2.setup();
-  motor3.setup();
-  motor4.setup();
+  setupMCPWM();
+
+  // motor1.setup();
+  // motor2.setup();
+  // motor3.setup();
+  // motor4.setup();
 }
 
 void setup()
