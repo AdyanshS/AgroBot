@@ -1,0 +1,8 @@
+x_drive_controller_cpp:
+  ros__parameters:
+    example_param: "abc"
+
+x_drive_controller_py:
+  ros__parameters:
+    example_param: "abc"
+
