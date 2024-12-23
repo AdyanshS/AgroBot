@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 
-from construct import max_
 import rclpy
 import numpy as np
 from math import pi
@@ -13,6 +12,8 @@ from agrobot_interfaces.msg import MotorPWMs, EncoderPulses, WheelAngularVel, PI
 
 MIN_PWM = 0
 MAX_PWM = 100
+MAX_RPM = 112  # Maximum motor RPM
+MAX_ANGULAR_VEL = 11.728613  # rad/s equivalent to 112 RPM
 
 
 class WheelSpeedControl(Node):
@@ -22,41 +23,33 @@ class WheelSpeedControl(Node):
 
         # Create Parameter
         self.declare_parameter("debug", False)
-        self.declare_parameter("kp", 0.8)  # Reduced Kp significantly
-        self.declare_parameter("ki", 0.001)  # Very small Ki
-        self.declare_parameter("kd", 0.05)  # Moderate Kd
+        self.declare_parameter("kp", 0.0)  # Reduced Kp significantly
+        self.declare_parameter("ki", 0.0)  # Very small Ki
+        self.declare_parameter("kd", 0.0)  # Moderate Kd
 
         self.debug = self.get_parameter("debug").value
 
+        # . Subscriptions
         self.enc_sub_ = self.create_subscription(
             EncoderPulses, "encoder_pulses", self.encoder_pulses_callback, 10)
-
-        self.motor_pwm_pub_ = self.create_publisher(
-            MotorPWMs, "motor_pwm", 10)
-
         self.wheel_speed_sub_ = self.create_subscription(
-            WheelAngularVel,
-            "wheel_angular_vel",
-            self.wheel_speed_callback,
-            10
-        )
+            WheelAngularVel, "wheel_angular_vel", self.wheel_speed_callback, 10)
 
+        # . Publishers
+        self.motor_pwm_pub_ = self.create_publisher(MotorPWMs, "motor_pwm", 10)
         self.error_pub_ = self.create_publisher(
             PIDWheelError, "wheel_speed_errors", 10)
 
-        self.encoder_counts_: list[int] = [0, 0, 0, 0]
-        self.previous_encoder_counts_in_loop_: list[int] = [0, 0, 0, 0]
-        self.wheel_speed_: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.actual_wheel_speed_: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.errors_: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.integral_terms_: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.previous_errors_: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.control_d: list[float] = [0.0, 0.0, 0.0, 0.0]
-        self.alpha = 0.1
-
+        # . Variables
+        self.encoder_counts_ = [0] * 4
+        self.previous_encoder_counts_ = [0] * 4
+        self.actual_wheel_speed_ = [0.0] * 4
+        self.wheel_speed_ = [0.0] * 4
+        self.errors_ = [0.0] * 4
+        self.previous_errors_ = [0.0] * 4
+        self.integral_terms_ = [0.0] * 4
         self.encoder_ticks_per_rev = 1464
-        self.wheel_radius = 0.05  # m - 100mm Dia
-        self.control_frequency = 20  # Hz
+        self.control_frequency = 30  # Hz
 
         # Timer For PID Control
         self.create_timer(1 / self.control_frequency, self.control_loop)
@@ -91,7 +84,7 @@ class WheelSpeedControl(Node):
     def calculate_wheel_speeds(self, dt: float):
         for i in range(4):
             delta_ticks = self.encoder_counts_[i] - \
-                self.previous_encoder_counts_in_loop_[i]
+                self.previous_encoder_counts_[i]
             self.actual_wheel_speed_[i] = (
                 delta_ticks / self.encoder_ticks_per_rev) * (2 * pi) / dt
 
@@ -103,7 +96,12 @@ class WheelSpeedControl(Node):
         dt = 1/self.control_frequency
 
         self.calculate_wheel_speeds(dt)
-        self.previous_encoder_counts_in_loop_ = self.encoder_counts_.copy()
+
+        for i in range(4):
+            self.get_logger().warn(
+                f"Wheel {i+1} , Actual: {self.actual_wheel_speed_[i]}"
+            )
+        self.previous_encoder_counts_ = self.encoder_counts_.copy()
 
         kp = self.get_parameter("kp").value
         ki = self.get_parameter("ki").value
@@ -112,44 +110,36 @@ class WheelSpeedControl(Node):
         motor_pwms = [0] * 4
 
         for i in range(4):
-            # Calculate Error based on absolute target speed
-            # Absolute target speed
-            target_speed_abs = abs(self.wheel_speed_[i])
-            actual_speed_abs = abs(self.actual_wheel_speed_[i])
+            # Motor Angular Vel 0
+            if self.wheel_speed_[i] == 0:
+                self.integral_terms_[i] = 0.0
+                self.errors_[i] = 0.0
+                self.previous_errors_[i] = 0.0
+                motor_pwms[i] = 0
+                continue
 
-            self.errors_[i] = target_speed_abs - actual_speed_abs
+            # Calculate base PWM using linear scaling
+            abs_target_speed = abs(self.wheel_speed_[i])
+            base_pwm = (abs_target_speed / MAX_ANGULAR_VEL) * MAX_PWM
 
-            # Compute the PID Components
-            self.integral_terms_[i] += self.errors_[i] * dt
-            delta_error = self.errors_[i] - self.previous_errors_[i]
+            # Calculate PID error correction
+            error = abs(self.wheel_speed_[i]) - \
+                abs(self.actual_wheel_speed_[i])
+            self.errors_[i] = error
+            self.integral_terms_[i] += error * dt
+            derivative = (error - self.previous_errors_[i]) / dt
 
-            # Low pass filter for differential control
-            self.control_d[i] = (self.control_d[i] *
-                                 (1.0 - self.alpha) + delta_error * self.alpha)
+            pid_correction = (kp * error) + \
+                (ki * self.integral_terms_[i]) + (kd * derivative)
 
-            # Clip the integral error
-            self.integral_terms_[i] = np.clip(
-                self.integral_terms_[i], -MAX_PWM, MAX_PWM)
+            # Calculate final PWM
+            pwm_output = base_pwm + pid_correction
+            pwm_output = np.clip(pwm_output, MIN_PWM, MAX_PWM)
 
-            # Calculate proportional error
-            proportional_error = kp * self.errors_[i]
-
-            # Calculate the PID output
-            pid_output = proportional_error + \
-                (ki * self.integral_terms_[i]) + (kd * self.control_d[i])
-
-            # Apply sign based on target speed
-            if self.wheel_speed_[i] < 0:
-                motor_pwms[i] = -np.clip(int(pid_output), MIN_PWM, MAX_PWM)
-            else:
-                motor_pwms[i] = np.clip(int(pid_output), MIN_PWM, MAX_PWM)
-
-            # Update the previous errors
-            self.previous_errors_[i] = self.errors_[i]
-
-            self.get_logger().error(
-                f"Wheel {i+1} Target: {self.wheel_speed_[i]}, Actual: {self.actual_wheel_speed_[i]}, P: {proportional_error}, I: {self.integral_terms_[i]}, D: {self.control_d[i]}, Output: {motor_pwms[i]}"
-            )
+            # Apply Direction
+            motor_pwms[i] = pwm_output if self.wheel_speed_[
+                i] > 0 else -pwm_output
+            self.previous_errors_[i] = error
 
         self.publish_motor_pwm(motor_pwms)
         self.publish_errors()
