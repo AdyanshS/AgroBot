@@ -220,10 +220,10 @@ void encoder_pulses_callback(rcl_timer_t *timer, int64_t last_call_time)
   {
 
     // Store the encoder pulses in the message
-    msg_encoder_pulses.encoder_1_pulse = encoder1.getCount();
-    msg_encoder_pulses.encoder_2_pulse = encoder2.getCount();
-    msg_encoder_pulses.encoder_3_pulse = encoder3.getCount();
-    msg_encoder_pulses.encoder_4_pulse = encoder4.getCount();
+    msg_encoder_pulses.encoder_1_pulse = -encoder1.getCount();
+    msg_encoder_pulses.encoder_2_pulse = -encoder2.getCount();
+    msg_encoder_pulses.encoder_3_pulse = -encoder3.getCount();
+    msg_encoder_pulses.encoder_4_pulse = -encoder4.getCount();
 
     // Publish the encoder pulses
     RCSOFTCHECK(rcl_publish(&publisher_enc, &msg_encoder_pulses, NULL));
@@ -335,16 +335,17 @@ void setup()
   // Configure WiFi transport
 
   // IPAddress agent_ip(10, 42, 0, 1);
-  IPAddress agent_ip(192, 168, 101, 229);
-  size_t agent_port = 8888;
+  // IPAddress agent_ip(192, 168, 101, 229);
+  // IPAddress agent_ip(192, 168, 0, 192);
+  // size_t agent_port = 8888;
 
-  char ssid[] = "Adyansh";
-  char psk[] = "12345678";
+  // char ssid[] = "SR_2.4";
+  // char psk[] = "Sakar@123";
 
-  set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
+  // set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
 
-  // Serial.begin(115200);
-  // set_microros_serial_transports(Serial);
+  Serial.begin(115200);
+  set_microros_serial_transports(Serial);
 
   // Initialize the hardware
   setup_hardware();

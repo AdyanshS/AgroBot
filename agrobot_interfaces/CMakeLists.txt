@@ -6,6 +6,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MotorPWMs.msg
   msg/EncoderPulses.msg
+  msg/WheelAngularVel.msg
+  msg/PIDWheelError.msg
   srv/ServiceExample.srv
   action/ActionExample.action
   DEPENDENCIES

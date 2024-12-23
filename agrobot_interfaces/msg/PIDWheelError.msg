@@ -1,0 +1,4 @@
+float32 wheel_1_error
+float32 wheel_2_error
+float32 wheel_3_error
+float32 wheel_4_error
