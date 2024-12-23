@@ -86,10 +86,132 @@ ESP32Encoder encoder2;
 ESP32Encoder encoder3;
 ESP32Encoder encoder4;
 
-// MotorDriver motor1(MotorDriver1_DIR2, MotorDriver1_PWM2, 255, 25, 0, &encoder1,0);
-// MotorDriver motor2(MotorDriver1_DIR1, MotorDriver1_PWM1, 255, 25, 1, &encoder2,0);
-// MotorDriver motor3(MotorDriver2_DIR2, MotorDriver2_PWM2, 255, 25, 2, &encoder3,-20);
-// MotorDriver motor4(MotorDriver2_DIR1, MotorDriver2_PWM1, 255, 25, 3, &encoder4,0);
+void testMotor(int motorDutyCycle, int duration, int cycles)
+{
+  // Array for encoder values
+  long previousEncoderTicks[4] = {0, 0, 0, 0};
+  long currentEncoderTicks[4] = {0, 0, 0, 0};
+  long encoderDifference[4] = {0, 0, 0, 0};
+
+  for (int i = 0; i < cycles; i++)
+  {
+    // Run motor clockwise
+    motorSetSpeed(1, motorDutyCycle);
+    motorSetSpeed(2, motorDutyCycle);
+    motorSetSpeed(3, motorDutyCycle - 5);
+    motorSetSpeed(4, motorDutyCycle);
+    delay(duration);
+
+    // Get current encoder ticks
+    currentEncoderTicks[0] = encoder1.getCount();
+    currentEncoderTicks[1] = encoder2.getCount();
+    currentEncoderTicks[2] = encoder3.getCount();
+    currentEncoderTicks[3] = encoder4.getCount();
+
+    // Calculate encoder difference
+    encoderDifference[0] = currentEncoderTicks[0] - previousEncoderTicks[0];
+    encoderDifference[1] = currentEncoderTicks[1] - previousEncoderTicks[1];
+    encoderDifference[2] = currentEncoderTicks[2] - previousEncoderTicks[2];
+    encoderDifference[3] = currentEncoderTicks[3] - previousEncoderTicks[3];
+
+    // Print encoder ticks and difference
+    Serial.print("Cycle ");
+    Serial.print(i + 1);
+    Serial.print(": Encoder Ticks: ");
+    Serial.print(currentEncoderTicks[0]);
+    Serial.print(", ");
+    Serial.print(currentEncoderTicks[1]);
+    Serial.print(", ");
+    Serial.print(currentEncoderTicks[2]);
+    Serial.print(", ");
+    Serial.print(currentEncoderTicks[3]);
+    Serial.println();
+
+    Serial.print("Difference: ");
+    Serial.print(encoderDifference[0]);
+    Serial.print(", ");
+    Serial.print(encoderDifference[1]);
+    Serial.print(", ");
+    Serial.print(encoderDifference[2]);
+    Serial.print(", ");
+    Serial.print(encoderDifference[3]);
+    Serial.println();
+
+    // Update previous encoder ticks
+    previousEncoderTicks[0] = currentEncoderTicks[0];
+    previousEncoderTicks[1] = currentEncoderTicks[1];
+    previousEncoderTicks[2] = currentEncoderTicks[2];
+    previousEncoderTicks[3] = currentEncoderTicks[3];
+
+    // Stop motor
+    motorSetSpeed(1, 0);
+    motorSetSpeed(2, 0);
+    motorSetSpeed(3, 0);
+    motorSetSpeed(4, 0);
+    delay(duration);
+  }
+
+  // Run motor counterclockwise
+
+  for (int i = 0; i < cycles; i++)
+  {
+    // Run motor clockwise
+
+    motorSetSpeed(1, -motorDutyCycle);
+    motorSetSpeed(2, -motorDutyCycle);
+    motorSetSpeed(3, -motorDutyCycle + 5);
+    motorSetSpeed(4, -motorDutyCycle);
+    delay(duration);
+
+    // Get current encoder ticks
+    currentEncoderTicks[0] = encoder1.getCount();
+    currentEncoderTicks[1] = encoder2.getCount();
+    currentEncoderTicks[2] = encoder3.getCount();
+    currentEncoderTicks[3] = encoder4.getCount();
+
+    // Calculate encoder difference
+    encoderDifference[0] = currentEncoderTicks[0] - previousEncoderTicks[0];
+    encoderDifference[1] = currentEncoderTicks[1] - previousEncoderTicks[1];
+    encoderDifference[2] = currentEncoderTicks[2] - previousEncoderTicks[2];
+    encoderDifference[3] = currentEncoderTicks[3] - previousEncoderTicks[3];
+
+    // Print encoder ticks and difference
+    Serial.print("Cycle ");
+    Serial.print(i + 1);
+    Serial.print(": Encoder Ticks: ");
+    Serial.print(currentEncoderTicks[0]);
+    Serial.print(", ");
+    Serial.print(currentEncoderTicks[1]);
+    Serial.print(", ");
+    Serial.print(currentEncoderTicks[2]);
+    Serial.print(", ");
+    Serial.print(currentEncoderTicks[3]);
+    Serial.println();
+
+    Serial.print("Difference: ");
+    Serial.print(encoderDifference[0]);
+    Serial.print(", ");
+    Serial.print(encoderDifference[1]);
+    Serial.print(", ");
+    Serial.print(encoderDifference[2]);
+    Serial.print(", ");
+    Serial.print(encoderDifference[3]);
+    Serial.println();
+
+    // Update previous encoder ticks
+    previousEncoderTicks[0] = currentEncoderTicks[0];
+    previousEncoderTicks[1] = currentEncoderTicks[1];
+    previousEncoderTicks[2] = currentEncoderTicks[2];
+    previousEncoderTicks[3] = currentEncoderTicks[3];
+
+    // Stop motor
+    motorSetSpeed(1, 0);
+    motorSetSpeed(2, 0);
+    motorSetSpeed(3, 0);
+    motorSetSpeed(4, 0);
+    delay(duration);
+  }
+}
 
 void encoder_pulses_callback(rcl_timer_t *timer, int64_t last_call_time)
 {
@@ -121,7 +243,6 @@ void motor_pwm_callback(const void *msgin)
   motorSetSpeed(2, msg_motor_pwm->motor2pwm);
   motorSetSpeed(3, msg_motor_pwm->motor3pwm);
   motorSetSpeed(4, msg_motor_pwm->motor4pwm);
-  
 }
 
 bool create_entities()
@@ -213,11 +334,12 @@ void setup()
 
   // Configure WiFi transport
 
-  IPAddress agent_ip(10, 42, 0, 1);
+  // IPAddress agent_ip(10, 42, 0, 1);
+  IPAddress agent_ip(192, 168, 101, 229);
   size_t agent_port = 8888;
 
-  char ssid[] = "adyansh_sakar";
-  char psk[]= "12345678";
+  char ssid[] = "Adyansh";
+  char psk[] = "12345678";
 
   set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
 
@@ -255,7 +377,6 @@ void loop()
     }
     break;
 
-
   case AGENT_DISCONNECTED:
     destroy_entities();
     state = WAITING_AGENT;
@@ -266,3 +387,44 @@ void loop()
   }
 }
 
+// void loop()
+// {
+//   /// FOR TESTING PURPOSES
+
+//   // testMotor(50, 2000, 3);
+
+//   // motorSetSpeed(1, 50);
+//   // delay(2000);
+//   // motorSetSpeed(1, 0);
+//   // delay(2000);
+
+//   // motorSetSpeed(2, 50);
+//   // delay(2000);
+//   // motorSetSpeed(2, 0);
+//   // delay(2000);
+
+//   // motorSetSpeed(3, 50);
+//   // delay(2000);
+//   // motorSetSpeed(3, 0);
+//   // delay(2000);
+
+//   // motorSetSpeed(4, 50);
+//   // delay(2000);
+//   // motorSetSpeed(4, 0);
+//   // delay(2000);
+
+//   motorSetSpeed(1, 50);
+//   motorSetSpeed(2, 50);
+//   motorSetSpeed(3, 50);
+//   motorSetSpeed(4, 50);
+
+//   // Print encoder values
+//   Serial.print("Encoder 1: ");
+//   Serial.print(encoder1.getCount());
+//   Serial.print(", Encoder 2: ");
+//   Serial.print(encoder2.getCount());
+//   Serial.print(", Encoder 3: ");
+//   Serial.print(encoder3.getCount());
+//   Serial.print(", Encoder 4: ");
+//   Serial.println(encoder4.getCount());
+// }
