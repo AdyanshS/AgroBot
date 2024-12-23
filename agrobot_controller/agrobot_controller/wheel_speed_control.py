@@ -23,9 +23,13 @@ class WheelSpeedControl(Node):
 
         # Create Parameter
         self.declare_parameter("debug", False)
-        self.declare_parameter("kp", 0.0)  # Reduced Kp significantly
-        self.declare_parameter("ki", 0.0)  # Very small Ki
-        self.declare_parameter("kd", 0.0)  # Moderate Kd
+        # self.declare_parameter("kp", 0.1)
+        # self.declare_parameter("ki", 0.5)
+        # self.declare_parameter("kd", 0.01)
+
+        self.declare_parameter("kp", 1.5)
+        self.declare_parameter("ki", 0.2)
+        self.declare_parameter("kd", 0.00)
 
         self.debug = self.get_parameter("debug").value
 
@@ -82,11 +86,14 @@ class WheelSpeedControl(Node):
             )
 
     def calculate_wheel_speeds(self, dt: float):
+        alpha = 0.95
         for i in range(4):
             delta_ticks = self.encoder_counts_[i] - \
                 self.previous_encoder_counts_[i]
-            self.actual_wheel_speed_[i] = (
+            new_speed = (
                 delta_ticks / self.encoder_ticks_per_rev) * (2 * pi) / dt
+            self.actual_wheel_speed_[
+                i] = alpha * self.actual_wheel_speed_[i] + (1 - alpha) * new_speed
 
             self.get_logger().warn(
                 f"Wheel {i+1} ACTUAL Speed: {self.actual_wheel_speed_[i]}"
@@ -111,7 +118,7 @@ class WheelSpeedControl(Node):
 
         for i in range(4):
             # Motor Angular Vel 0
-            if self.wheel_speed_[i] == 0:
+            if abs(self.wheel_speed_[i]) < 0.1:  # * Dead zone for small Speeds
                 self.integral_terms_[i] = 0.0
                 self.errors_[i] = 0.0
                 self.previous_errors_[i] = 0.0
@@ -126,7 +133,12 @@ class WheelSpeedControl(Node):
             error = abs(self.wheel_speed_[i]) - \
                 abs(self.actual_wheel_speed_[i])
             self.errors_[i] = error
+
+            # . Integral
             self.integral_terms_[i] += error * dt
+            self.integral_terms_[i] = np.clip(
+                self.integral_terms_[i], -50, 50)
+
             derivative = (error - self.previous_errors_[i]) / dt
 
             pid_correction = (kp * error) + \
