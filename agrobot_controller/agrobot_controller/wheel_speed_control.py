@@ -23,13 +23,17 @@ class WheelSpeedControl(Node):
 
         # Create Parameter
         self.declare_parameter("debug", False)
-        # self.declare_parameter("kp", 0.1)
-        # self.declare_parameter("ki", 0.5)
-        # self.declare_parameter("kd", 0.01)
 
-        self.declare_parameter("kp", 1.5)
-        self.declare_parameter("ki", 0.2)
+        # self.declare_parameter("kp", 1.5)
+        # self.declare_parameter("ki", 0.2)
+        # self.declare_parameter("kd", 0.00)
+
+        self.declare_parameter("kp", 0.3)
+        self.declare_parameter("ki", 0.635)
         self.declare_parameter("kd", 0.00)
+        self.declare_parameter("alpha", 0.85)
+        # Threshold for PWM Changes
+        self.declare_parameter("pwm_threshold", 1.0)
 
         self.debug = self.get_parameter("debug").value
 
@@ -37,12 +41,15 @@ class WheelSpeedControl(Node):
         self.enc_sub_ = self.create_subscription(
             EncoderPulses, "encoder_pulses", self.encoder_pulses_callback, 10)
         self.wheel_speed_sub_ = self.create_subscription(
-            WheelAngularVel, "wheel_angular_vel", self.wheel_speed_callback, 10)
+            WheelAngularVel, "wheel_angular_vel/control", self.wheel_speed_callback, 10)
 
         # . Publishers
-        self.motor_pwm_pub_ = self.create_publisher(MotorPWMs, "motor_pwm", 10)
+        self.motor_pwm_pub_ = self.create_publisher(
+            MotorPWMs, "motor_pwm", 10)
         self.error_pub_ = self.create_publisher(
             PIDWheelError, "wheel_speed_errors", 10)
+        self.wheel_ang_vel_pub_ = self.create_publisher(
+            WheelAngularVel, "wheel_angular_vel/feedback", 10)
 
         # . Variables
         self.encoder_counts_ = [0] * 4
@@ -52,8 +59,9 @@ class WheelSpeedControl(Node):
         self.errors_ = [0.0] * 4
         self.previous_errors_ = [0.0] * 4
         self.integral_terms_ = [0.0] * 4
+        self.previous_pwms_ = [0] * 4
         self.encoder_ticks_per_rev = 1464
-        self.control_frequency = 30  # Hz
+        self.control_frequency = 30.0  # Hz
 
         # Timer For PID Control
         self.create_timer(1 / self.control_frequency, self.control_loop)
@@ -86,7 +94,9 @@ class WheelSpeedControl(Node):
             )
 
     def calculate_wheel_speeds(self, dt: float):
-        alpha = 0.95
+        alpha = self.get_parameter("alpha").value
+
+        angular_vel_msg = WheelAngularVel()
         for i in range(4):
             delta_ticks = self.encoder_counts_[i] - \
                 self.previous_encoder_counts_[i]
@@ -95,9 +105,16 @@ class WheelSpeedControl(Node):
             self.actual_wheel_speed_[
                 i] = alpha * self.actual_wheel_speed_[i] + (1 - alpha) * new_speed
 
-            self.get_logger().warn(
+            angular_vel_msg.wheel_1_angular_vel = self.actual_wheel_speed_[i]
+
+            setattr(angular_vel_msg,
+                    f'wheel_{i+1}_angular_vel', self.actual_wheel_speed_[i])
+
+            self.get_logger().error(
                 f"Wheel {i+1} ACTUAL Speed: {self.actual_wheel_speed_[i]}"
             )
+
+        self.wheel_ang_vel_pub_.publish(angular_vel_msg)
 
     def control_loop(self):
         dt = 1/self.control_frequency
@@ -113,6 +130,7 @@ class WheelSpeedControl(Node):
         kp = self.get_parameter("kp").value
         ki = self.get_parameter("ki").value
         kd = self.get_parameter("kd").value
+        pwm_threshold = self.get_parameter("pwm_threshold").value
 
         motor_pwms = [0] * 4
 
@@ -137,7 +155,7 @@ class WheelSpeedControl(Node):
             # . Integral
             self.integral_terms_[i] += error * dt
             self.integral_terms_[i] = np.clip(
-                self.integral_terms_[i], -50, 50)
+                self.integral_terms_[i], -100, 100)
 
             derivative = (error - self.previous_errors_[i]) / dt
 
@@ -151,7 +169,18 @@ class WheelSpeedControl(Node):
             # Apply Direction
             motor_pwms[i] = pwm_output if self.wheel_speed_[
                 i] > 0 else -pwm_output
+
+            # Check if the change in PWM is above the threshold
+            if abs(motor_pwms[i] - self.previous_pwms_[i]) > pwm_threshold:
+                motor_pwms[i] = pwm_output
+                self.previous_pwms_[i] = motor_pwms[i]  # Update previous PWM
+
             self.previous_errors_[i] = error
+
+            # LOG PID Values
+            self.get_logger().warn(
+                f"Wheel {i+1}, Error: \033[91m{error}\033[0m, P: \033[92m{kp * error}\033[0m, I: \033[93m{ki * self.integral_terms_[i]}\033[0m, D: \033[94m{kd * derivative}\033[0m, PID: \033[95m{pid_correction}\033[0m, PWM: \033[96m{motor_pwms[i]}\033[0m"
+            )
 
         self.publish_motor_pwm(motor_pwms)
         self.publish_errors()
