@@ -23,3 +23,11 @@ For encoder these pins have been tested and working.
 |           | B       |  32   |
 
 Power to encoders was provided using 5V from ESP32
+
+### Joystick
+
+Check batter percentage
+
+```bash
+ upower -i /org/freedesktop/UPower/devices/gaming_input_ps_controller_battery_98ob6oe9oacoe2
+```

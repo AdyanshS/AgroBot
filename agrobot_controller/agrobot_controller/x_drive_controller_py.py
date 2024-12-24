@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """
+X-Drive 4 Wheeled Omni Wheel Robot Controller
    +-------+
    |       |
 M1 \       / M4
@@ -21,7 +22,16 @@ from math import pi, sin, cos, sqrt, tan
 from rclpy.node import Node
 
 from std_msgs.msg import String
-from agrobot_interfaces.msg import MotorPWMs, EncoderPulses
+from agrobot_interfaces.msg import WheelAngularVel
+from geometry_msgs.msg import Twist
+
+# 1/Root2 Value
+ONE_BY_ROOT2 = 0.70710678118
+ROOT2 = 1.41421356237
+MAX_WHEEL_ANG_VEL = 11.7286  # rad/s
+MAX_LIN_X = 0.8293  # m/s
+MAX_LIN_Y = 0.8293  # m/s
+MAX_ANG_Z = 2.5299  # rad/s
 
 
 class XDriveController(Node):
@@ -30,50 +40,116 @@ class XDriveController(Node):
         super().__init__("x_drive_controller_py")
 
         # Create Parameter
-        self.declare_parameter("debug", False)
+        self.declare_parameter("debug", True)
         self.debug = self.get_parameter("debug").value
 
-        self.enc_sub_ = self.create_subscription(
-            EncoderPulses,
-            "encoder_pulses",
-            self.encoder_pulses_callback,
+        self.wheel_ang_sub = self.create_subscription(
+            WheelAngularVel,
+            "wheel_angular_vel/feedback",
+            self.ang_vel_feedback_callback,
             10
         )
 
-        self.motor_pwm_pub_ = self.create_publisher(
-            MotorPWMs,
-            "motor_pwm",
+        self.wheel_ang_pub = self.create_publisher(
+            WheelAngularVel,
+            "wheel_angular_vel/control",
             10
         )
 
-        self.encoder_counts_: list[int] = [0, 0, 0, 0]
+        self.cmd_vel_sub = self.create_subscription(
+            Twist,
+            "cmd_vel/drive",
+            self.cmd_vel_callback,
+            10
+        )
 
-    def encoder_pulses_callback(self, msg: EncoderPulses):
-        
-        self.encoder_counts_[0] = msg.encoder_1_pulse
-        self.encoder_counts_[1] = msg.encoder_2_pulse
-        self.encoder_counts_[2] = msg.encoder_3_pulse
-        self.encoder_counts_[3] = msg.encoder_4_pulse
+        self.current_wheel_ang_vel: list[float] = [0.0] * 4
+
+        self.wheel_radius = 0.05  # meters
+        self.robot_radius = 0.2318  # meters
+
+    def cmd_vel_callback(self, msg: Twist):
+        x_dot = msg.linear.x
+        y_dot = msg.linear.y
+        w_dot = msg.angular.z
+
+        if self.debug:
+            self.get_logger().error(
+                f"Robot Velocities: {x_dot}, {y_dot}, {w_dot}"
+            )
+        wheel_ang_vel = self.inverse_kinematics(x_dot, y_dot, w_dot)
+
+        self.send_wheel_ang_vel(wheel_ang_vel)
 
         if self.debug:
             self.get_logger().info(
-                f"Encoder Pulses: {self.encoder_counts_[0]}, {self.encoder_counts_[1]}, {self.encoder_counts_[2]}, {self.encoder_counts_[3]}"
+                f"Wheel Angular Velocities: {wheel_ang_vel[0]}, {wheel_ang_vel[1]}, {wheel_ang_vel[2]}, {wheel_ang_vel[3]}"
             )
 
-    def publish_motor_pwm(self, motor_pwms: list[int]):
-        motor_pwm_msg = MotorPWMs()
-        motor_pwm_msg.motor1pwm = motor_pwms[0]
-        motor_pwm_msg.motor2pwm = motor_pwms[1]
-        motor_pwm_msg.motor3pwm = motor_pwms[2]
-        motor_pwm_msg.motor4pwm = motor_pwms[3]
+    def inverse_kinematics(self, x_dot: float, y_dot: float, w_dot: float):
 
-        self.motor_pwm_pub_.publish(motor_pwm_msg)
+        # MAtrix
+        robot_vel = np.array([w_dot, x_dot, y_dot])
+
+        # Transformation Matrix
+        T = np.array([
+            [-self.robot_radius, ONE_BY_ROOT2, -ONE_BY_ROOT2],
+            [-self.robot_radius, ONE_BY_ROOT2, ONE_BY_ROOT2],
+            [-self.robot_radius, -ONE_BY_ROOT2, ONE_BY_ROOT2],
+            [-self.robot_radius, -ONE_BY_ROOT2, -ONE_BY_ROOT2]
+        ])
+
+        # Calculate Wheel Angular Velocities
+        wheel_ang_vel = np.dot(T, robot_vel) / self.wheel_radius
+
+        return list(wheel_ang_vel)
+
+    def forward_kinematics(self, wheel_ang_vel: list[float]):
+        # Pseudo Inverse Transformation Matrix
+        T_inv = np.array([
+            [-1/self.robot_radius, -1/self.robot_radius,
+                -1/self.robot_radius, -1/self.robot_radius],
+            [ROOT2, ROOT2, -ROOT2, -ROOT2],
+            [-ROOT2, ROOT2, ROOT2, -ROOT2]
+        ])
+
+        # Calculate Robot Velocities
+        robot_vel = np.dot(T_inv, wheel_ang_vel) * (self.wheel_radius) * (1/4)
+
+        return list(robot_vel)
+
+    def ang_vel_feedback_callback(self, msg: WheelAngularVel):
+
+        self.current_wheel_ang_vel[0] = msg.wheel_1_angular_vel
+        self.current_wheel_ang_vel[1] = msg.wheel_2_angular_vel
+        self.current_wheel_ang_vel[2] = msg.wheel_3_angular_vel
+        self.current_wheel_ang_vel[3] = msg.wheel_4_angular_vel
+
+        robot_vel = self.forward_kinematics(self.current_wheel_ang_vel)
 
         if self.debug:
             self.get_logger().info(
-                f"Motor PWMs: {motor_pwms[0]}, {motor_pwms[1]}, {motor_pwms[2]}, {motor_pwms[3]}"
+                f"Robot Velocities: {robot_vel[0]}, {robot_vel[1]}, {robot_vel[2]}"
             )
-        
+
+        if self.debug:
+            self.get_logger().info(
+                f"Current_wheel_ang_vel: {self.current_wheel_ang_vel[0]}, {self.current_wheel_ang_vel[1]}, {self.current_wheel_ang_vel[2]}, {self.current_wheel_ang_vel[3]}"
+            )
+
+    def send_wheel_ang_vel(self, wheel_ang_vel: list[float]):
+        motor_pwm_msg = WheelAngularVel()
+        motor_pwm_msg.wheel_1_angular_vel = wheel_ang_vel[0]
+        motor_pwm_msg.wheel_2_angular_vel = wheel_ang_vel[1]
+        motor_pwm_msg.wheel_3_angular_vel = wheel_ang_vel[2]
+        motor_pwm_msg.wheel_4_angular_vel = wheel_ang_vel[3]
+
+        self.wheel_ang_pub.publish(motor_pwm_msg)
+
+        if self.debug:
+            self.get_logger().info(
+                f"Motor PWMs: {wheel_ang_vel[0]}, {wheel_ang_vel[1]}, {wheel_ang_vel[2]}, {wheel_ang_vel[3]}"
+            )
 
 
 def main(args=None):

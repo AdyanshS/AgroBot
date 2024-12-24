@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "colcon: build symlink (debug)",
+            "type": "shell",
+            "command": "cd ~/agrobot_ws && colcon build --symlink-install --event-handlers console_direct+",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "colcon: build (agrobot_interfaces)",
+            "type": "shell",
+            "command": "cd ~/agrobot_ws && colcon build --packages-select agrobot_interfaces --symlink-install --event-handlers console_direct+",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "colcon: clean",
+            "type": "shell",
+            "command": "cd ~/agrobot_ws && rm -rf build/ install/ log/",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+    ]
+}

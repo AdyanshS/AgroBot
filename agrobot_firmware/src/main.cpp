@@ -334,18 +334,17 @@ void setup()
 
   // Configure WiFi transport
 
-  // IPAddress agent_ip(10, 42, 0, 1);
-  // IPAddress agent_ip(192, 168, 101, 229);
+  IPAddress agent_ip(10, 42, 0, 1);
   // IPAddress agent_ip(192, 168, 0, 192);
-  // size_t agent_port = 8888;
+  size_t agent_port = 8888;
 
-  // char ssid[] = "SR_2.4";
-  // char psk[] = "Sakar@123";
+  char ssid[] = "adyansh_sakar";
+  char psk[] = "12345678";
 
-  // set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
+  set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
 
-  Serial.begin(115200);
-  set_microros_serial_transports(Serial);
+  // Serial.begin(115200);
+  // set_microros_serial_transports(Serial);
 
   // Initialize the hardware
   setup_hardware();
