@@ -144,6 +144,9 @@ class WheelSpeedControl(Node):
             abs_target_speed = abs(self.wheel_speed_[i])
             base_pwm = (abs_target_speed / MAX_ANGULAR_VEL) * MAX_PWM
 
+            if i == 3:
+                base_pwm = base_pwm - 5
+
             # Calculate PID error correction
             error = abs(self.wheel_speed_[i]) - \
                 abs(self.actual_wheel_speed_[i])
