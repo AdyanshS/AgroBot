@@ -14,6 +14,8 @@
 #include <agrobot_interfaces/msg/encoder_pulses.h>
 #include <agrobot_interfaces/msg/motor_pw_ms.h>
 
+#define MOTOR3_ERROR 9
+
 // Macros
 #define RCCHECK(fn)              \
   {                              \
@@ -234,14 +236,44 @@ void motor_pwm_callback(const void *msgin)
 {
   const agrobot_interfaces__msg__MotorPWMs *msg_motor_pwm = (const agrobot_interfaces__msg__MotorPWMs *)msgin;
 
-  // motor1.runMotor(msg_motor_pwm->motor1pwm);
-  // motor2.runMotor(msg_motor_pwm->motor2pwm);
-  // motor3.runMotor(msg_motor_pwm->motor3pwm);
-  // motor4.runMotor(msg_motor_pwm->motor4pwm);
+  // Introduce a small error for motor3
+  int motor3_pwm = msg_motor_pwm->motor3pwm;
+  Serial.print("Motor 3 PWM: ");
+  Serial.println(motor3_pwm);
+
+  if (motor3_pwm != 0)
+  {
+    // Apply full motor3 error
+    if (abs(motor3_pwm - MOTOR3_ERROR > 0))
+    {
+      if (motor3_pwm > 0)
+      {
+        motor3_pwm = motor3_pwm - MOTOR3_ERROR;
+      }
+      else
+      {
+        motor3_pwm = motor3_pwm + MOTOR3_ERROR;
+      }
+    }
+    // apply half motor 3 error
+    else
+    {
+      if (motor3_pwm > 0)
+      {
+        motor3_pwm = motor3_pwm - MOTOR3_ERROR / 2;
+      }
+      else
+      {
+        motor3_pwm = motor3_pwm + MOTOR3_ERROR / 2;
+      }
+    }
+  }
+  Serial.print("Motor 3 PWM Corrected: ");
+  Serial.println(motor3_pwm);
 
   motorSetSpeed(1, msg_motor_pwm->motor1pwm);
   motorSetSpeed(2, msg_motor_pwm->motor2pwm);
-  motorSetSpeed(3, msg_motor_pwm->motor3pwm);
+  motorSetSpeed(3, motor3_pwm);
   motorSetSpeed(4, msg_motor_pwm->motor4pwm);
 }
 
@@ -343,7 +375,7 @@ void setup()
 
   set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
 
-  // Serial.begin(115200);
+  Serial.begin(115200);
   // set_microros_serial_transports(Serial);
 
   // Initialize the hardware
