@@ -51,11 +51,20 @@ def generate_launch_description():
             agrobot_teleop_pkg_dir, 'launch', 'joystick.launch.py')),
     )
 
+    # Static tf of base_link to odom
+    static_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'odom'],
+        output='screen'
+    )
+
     ld = LaunchDescription()
     # Arguments
     ld.add_action(use_sim_time_arg)
     # Nodes
     ld.add_action(twist_mux_node)
+    # ld.add_action(static_tf)
     # Launch Files
     ld.add_action(agrobot_controller_launch)
     ld.add_action(joystick_launch)

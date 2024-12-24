@@ -101,8 +101,6 @@ class WheelSpeedControl(Node):
             self.actual_wheel_speed_[
                 i] = alpha * self.actual_wheel_speed_[i] + (1 - alpha) * new_speed
 
-            angular_vel_msg.wheel_1_angular_vel = self.actual_wheel_speed_[i]
-
             setattr(angular_vel_msg,
                     f'wheel_{i+1}_angular_vel', self.actual_wheel_speed_[i])
 
@@ -118,10 +116,11 @@ class WheelSpeedControl(Node):
 
         self.calculate_wheel_speeds(dt)
 
-        for i in range(4):
-            self.get_logger().warn(
-                f"Wheel {i+1} , Actual: {self.actual_wheel_speed_[i]}"
-            )
+        if self.debug:
+            for i in range(4):
+                self.get_logger().warn(
+                    f"Wheel {i+1} , Actual: {self.actual_wheel_speed_[i]}"
+                )
         self.previous_encoder_counts_ = self.encoder_counts_.copy()
 
         kp = self.get_parameter("kp").value
@@ -163,14 +162,11 @@ class WheelSpeedControl(Node):
             pwm_output = base_pwm + pid_correction
 
             # Apply Direction
-            print(f"Wheel {i+1} Speed: {self.wheel_speed_[i]}")
-            print(f"pwm_output: {pwm_output}")
             if self.wheel_speed_[i] > 0:
                 pwm_output = np.clip(pwm_output, MIN_PWM, MAX_PWM)
             else:
                 pwm_output = -np.clip(pwm_output, MIN_PWM, MAX_PWM)
 
-            print(f"pwm_output after: {pwm_output}")
             # Check if the change in PWM is above the threshold
             # if abs(motor_pwms[i] - self.previous_pwms_[i]) > pwm_threshold:
             #     motor_pwms[i] = pwm_output
