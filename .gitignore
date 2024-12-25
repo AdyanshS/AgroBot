@@ -1,3 +1,8 @@
 agrobot_firmware/.**
 agrobot_firmware/lib/
 agrobot_firmware/test/
+agrobot_firmware_s3/.vscode/extensions.json
+agrobot_firmware_s3/.vscode/settings.json
+agrobot_firmware_s3/lib/README
+agrobot_firmware_s3/test/README
+agrobot_firmware_s3/.gitignore
