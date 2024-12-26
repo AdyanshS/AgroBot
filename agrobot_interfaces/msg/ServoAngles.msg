@@ -1,0 +1,5 @@
+float32 servo1_angle
+float32 servo2_angle 
+float32 servo3_angle
+float32 servo4_angle
+float32 servo5_angle

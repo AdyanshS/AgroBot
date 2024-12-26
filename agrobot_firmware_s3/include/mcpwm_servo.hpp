@@ -1,19 +1,6 @@
-#include "sdkconfig.h"
 #include "Arduino.h"
-#include "esp_system.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/timers.h"
-#include "freertos/event_groups.h"
-
-#include <driver/adc.h>
-#include "esp_sleep.h"
 #include "driver/mcpwm.h"
-
-#define SERVO1 11
-#define SERVO2 12
-#define SERVO3 13
-#define SERVO4 14
+#include "pin_map.hpp"
 
 #define SERVO_MIN_PULSEWIDTH 500  // Minimum pulse width in microsecond
 #define SERVO_MAX_PULSEWIDTH 2500 // Maximum pulse width in microsecond
@@ -97,10 +84,3 @@ void getMotorPulseWidth(ServoConfig servo)
     Serial.print(duty_us);
     Serial.println(" us");
 }
-
-// void setup()
-// {
-//   Serial.begin(115200);
-
-//   setupMCPWMServo();
-// }
