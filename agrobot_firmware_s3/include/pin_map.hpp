@@ -4,6 +4,7 @@
 #define SERVO2 12
 #define SERVO3 13
 #define SERVO4 14
+#define SERVO5 15
 
 // ADC Channels definitions - Cobra Line Sensor
 #define CobraIR1 ADC1_CHANNEL_3 // GPIO 4
