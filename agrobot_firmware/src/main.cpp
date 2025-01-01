@@ -9,8 +9,9 @@
 
 #include <ESP32Encoder.h>
 #include "pin_map.hpp"
-// #include "motor_driver.hpp"
 #include "motor_driver_mcpwm.hpp"
+
+#include <std_msgs/msg/int32.h>
 #include <agrobot_interfaces/msg/encoder_pulses.h>
 #include <agrobot_interfaces/msg/motor_pw_ms.h>
 
@@ -67,10 +68,19 @@ agrobot_interfaces__msg__EncoderPulses msg_encoder_pulses;
 rclc_executor_t executor_pub;
 rcl_timer_t timer;
 
+//. Publisher Lift Encoder Pulses
+rcl_publisher_t publisher_lift_enc;
+std_msgs__msg__Int32 msg_lift_encoder;
+
 //. Subscriber Motor PWM Values
 rcl_subscription_t subscriber_pwm;
 agrobot_interfaces__msg__MotorPWMs msg_motor_pwm;
 rclc_executor_t executor_sub;
+
+//. Subscriber Lift Motor PWM Values
+rcl_subscription_t subscriber_lift_pwm;
+std_msgs__msg__Int32 msg_lift_pwm;
+
 
 bool micro_ros_init_successful;
 
@@ -87,6 +97,7 @@ ESP32Encoder encoder1;
 ESP32Encoder encoder2;
 ESP32Encoder encoder3;
 ESP32Encoder encoder4;
+ESP32Encoder encoder5;
 
 void testMotor(int motorDutyCycle, int duration, int cycles)
 {
@@ -229,6 +240,10 @@ void encoder_pulses_callback(rcl_timer_t *timer, int64_t last_call_time)
 
     // Publish the encoder pulses
     RCSOFTCHECK(rcl_publish(&publisher_enc, &msg_encoder_pulses, NULL));
+
+    // Publish the lift encoder pulses
+    msg_lift_encoder.data = -encoder5.getCount();
+    RCSOFTCHECK(rcl_publish(&publisher_lift_enc, &msg_lift_encoder, NULL));
   }
 }
 
@@ -277,14 +292,20 @@ void motor_pwm_callback(const void *msgin)
   motorSetSpeed(4, msg_motor_pwm->motor4pwm);
 }
 
+void lift_motor_callback(const void *msgin)
+{
+  const std_msgs__msg__Int32 *msg_lift_pwm = (const std_msgs__msg__Int32 *)msgin;
+  motorSetSpeed(5, msg_lift_pwm->data);
+}
+
 bool create_entities()
 {
   allocator = rcl_get_default_allocator();
 
   // Initialize and modify options ( Set DOMAIN_ID to 20)
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-  rcl_init_options_init(&init_options, allocator);
-  rcl_init_options_set_domain_id(&init_options, 20);
+  RCCHECK(rcl_init_options_init(&init_options, allocator));
+  RCCHECK(rcl_init_options_set_domain_id(&init_options, 20));
 
   // Create init_options
   RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
@@ -299,12 +320,26 @@ bool create_entities()
       ROSIDL_GET_MSG_TYPE_SUPPORT(agrobot_interfaces, msg, EncoderPulses),
       "encoder_pulses"));
 
+  // Create Lift Encoder Pulses Publisher
+  RCCHECK(rclc_publisher_init_default(
+      &publisher_lift_enc,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+      "encoder_lift_motor"));
+
   // Create Motor PWM Subscriber
   RCCHECK(rclc_subscription_init_default(
       &subscriber_pwm,
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(agrobot_interfaces, msg, MotorPWMs),
       "motor_pwm"));
+
+  // Create Lift Motor PWM Subscriber
+  RCCHECK(rclc_subscription_init_default(
+      &subscriber_lift_pwm,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+      "lift_motor_pwm"));
 
   // Create Timer for Encoder Pulses
   const unsigned int timer_timeout = 10;
@@ -320,6 +355,7 @@ bool create_entities()
 
   RCCHECK(rclc_executor_init(&executor_sub, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor_sub, &subscriber_pwm, &msg_motor_pwm, motor_pwm_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor_sub, &subscriber_lift_pwm, &msg_lift_pwm, lift_motor_callback, ON_NEW_DATA));
 
   return true;
 }
@@ -330,35 +366,32 @@ void destroy_entities()
   rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
   (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-  rcl_publisher_fini(&publisher_enc, &node);
-  rcl_timer_fini(&timer);
-  rcl_subscription_fini(&subscriber_pwm, &node);
+  RCCHECK(rcl_publisher_fini(&publisher_enc, &node));
+  RCCHECK(rcl_publisher_fini(&publisher_lift_enc, &node));
+  RCCHECK(rcl_timer_fini(&timer));
+  RCCHECK(rcl_subscription_fini(&subscriber_pwm, &node));
+  RCCHECK(rcl_subscription_fini(&subscriber_lift_pwm, &node));
   rclc_executor_fini(&executor_pub);
   rclc_executor_fini(&executor_sub);
-  rcl_node_fini(&node);
+  RCCHECK(rcl_node_fini(&node));
   rclc_support_fini(&support);
 }
 
 void setup_hardware()
 {
   encoder1.attachFullQuad(ENC1_A, ENC1_B);
-  encoder1.setCount(0);
-
   encoder2.attachFullQuad(ENC2_A, ENC2_B);
-  encoder2.setCount(0);
-
   encoder3.attachFullQuad(ENC3_A, ENC3_B);
-  encoder3.setCount(0);
-
   encoder4.attachFullQuad(ENC4_A, ENC4_B);
+  encoder5.attachFullQuad(ENC5_A, ENC5_B);
+
+  encoder1.setCount(0);
+  encoder2.setCount(0);
+  encoder3.setCount(0);
   encoder4.setCount(0);
+  encoder5.setCount(0);
 
   setupMCPWM();
-
-  // motor1.setup();
-  // motor2.setup();
-  // motor3.setup();
-  // motor4.setup();
 }
 
 void setup()
@@ -419,10 +452,9 @@ void loop()
   }
 }
 
+//. FOR TESTING PURPOSES
 // void loop()
 // {
-//   /// FOR TESTING PURPOSES
-
 //   // testMotor(50, 2000, 3);
 
 //   // motorSetSpeed(1, 50);
@@ -445,18 +477,26 @@ void loop()
 //   // motorSetSpeed(4, 0);
 //   // delay(2000);
 
-//   motorSetSpeed(1, 50);
-//   motorSetSpeed(2, 50);
-//   motorSetSpeed(3, 50);
-//   motorSetSpeed(4, 50);
+//   // motorSetSpeed(5, 50);
+//   // delay(2000);
+//   // motorSetSpeed(5, 0);
+//   // delay(2000);
 
-//   // Print encoder values
-//   Serial.print("Encoder 1: ");
-//   Serial.print(encoder1.getCount());
-//   Serial.print(", Encoder 2: ");
-//   Serial.print(encoder2.getCount());
-//   Serial.print(", Encoder 3: ");
-//   Serial.print(encoder3.getCount());
-//   Serial.print(", Encoder 4: ");
-//   Serial.println(encoder4.getCount());
+//   // motorSetSpeed(1, 50);
+//   // motorSetSpeed(2, 50);
+//   // motorSetSpeed(3, 50);
+//   // motorSetSpeed(4, 50);
+//   // motorSetSpeed(5, 50);
+
+//   // // Print encoder values
+//   // Serial.print("Encoder 1: ");
+//   // Serial.print(encoder1.getCount());
+//   // Serial.print(", Encoder 2: ");
+//   // Serial.print(encoder2.getCount());
+//   // Serial.print(", Encoder 3: ");
+//   // Serial.print(encoder3.getCount());
+//   // Serial.print(", Encoder 4: ");
+//   // Serial.println(encoder4.getCount());
+//   // Serial.print(", Encoder 5: ");
+//   // Serial.println(encoder5.getCount());
 // }
