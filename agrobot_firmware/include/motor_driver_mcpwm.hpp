@@ -37,14 +37,14 @@ void setupMCPWM()
     mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1A, MotorDriver2_PWM1);
     mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1B, MotorDriver2_PWM2);
 
-    mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM2A, MotorDriver3_PWM1); // Lift Motor
+    // mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM2A, MotorDriver3_PWM1); // Lift Motor
 
     // Initialize direction pins
     pinMode(MotorDriver1_DIR1, OUTPUT);
     pinMode(MotorDriver1_DIR2, OUTPUT);
     pinMode(MotorDriver2_DIR1, OUTPUT);
     pinMode(MotorDriver2_DIR2, OUTPUT);
-    pinMode(MotorDriver3_DIR1, OUTPUT); // Lift Motor
+    // pinMode(MotorDriver3_DIR1, OUTPUT); // Lift Motor
 
     // Configure MCPWM Parameters
     mcpwm_config_t pwm_config;
@@ -57,7 +57,7 @@ void setupMCPWM()
     // Configure PWM timers
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);
     mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_1, &pwm_config);
-    mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_2, &pwm_config); // Lift Motor
+    // mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_2, &pwm_config); // Lift Motor
 }
 
 int speed_map(int x, int in_min, int in_max, int out_min, int out_max)
@@ -91,7 +91,7 @@ void motorSetSpeed(uint8_t motor, int8_t speed)
     // Serial.print(" Speed ");
     // Serial.println(speed);
 
-    if (motor < 1 || motor > 4)
+    if (motor < 1 || motor > 5)
         return; // ! Invalid motor number
 
     if (speed == 0)

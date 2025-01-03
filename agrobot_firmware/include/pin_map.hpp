@@ -20,14 +20,14 @@
 // Encoder Pins
 // #define ENC3_A 13    // ! When there is a connection in 13 and 12 gpio pins the code does not get uploaded to the board
 // #define ENC3_B 12
-#define ENC1_A 14
-#define ENC1_B 27
-#define ENC2_A 26
-#define ENC2_B 25
-#define ENC3_A 33
-#define ENC3_B 32
-#define ENC4_A 35
-#define ENC4_B 34
+#define ENC1_A 27
+#define ENC1_B 14
+#define ENC2_A 25
+#define ENC2_B 26
+#define ENC3_A 32
+#define ENC3_B 33
+#define ENC4_A 34
+#define ENC4_B 35
 #define ENC5_A 39 // TODO: Change the pin numbers
 #define ENC5_B 36
 

@@ -12,8 +12,9 @@ from agrobot_interfaces.msg import MotorPWMs, EncoderPulses, WheelAngularVel, PI
 
 MIN_PWM = 0
 MAX_PWM = 100
-MAX_RPM = 112  # Maximum motor RPM
-MAX_ANGULAR_VEL = 11.728613  # rad/s equivalent to 112 RPM
+MAX_RPM = 112  # Maximum motor RPM (found in motor datasheet)
+# Found this value after sending 100pwm to the motor and measuring the angular velocity
+MAX_ANGULAR_VEL = 8.2
 
 
 class WheelSpeedControl(Node):
@@ -142,6 +143,8 @@ class WheelSpeedControl(Node):
             # Calculate base PWM using linear scaling
             abs_target_speed = abs(self.wheel_speed_[i])
             base_pwm = (abs_target_speed / MAX_ANGULAR_VEL) * MAX_PWM
+            if self.debug:
+                self.get_logger().info(f"Base PWM: {base_pwm}")
 
             # Calculate PID error correction
             error = abs(self.wheel_speed_[i]) - \
@@ -181,7 +184,9 @@ class WheelSpeedControl(Node):
                 )
 
         self.publish_motor_pwm(motor_pwms)
-        self.publish_errors()
+
+        if self.debug:
+            self.publish_errors()
 
     def publish_motor_pwm(self, motor_pwms: list[int]):
         motor_pwm_msg = MotorPWMs()

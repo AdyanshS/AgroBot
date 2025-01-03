@@ -81,7 +81,6 @@ rclc_executor_t executor_sub;
 rcl_subscription_t subscriber_lift_pwm;
 std_msgs__msg__Int32 msg_lift_pwm;
 
-
 bool micro_ros_init_successful;
 
 // State machine states
@@ -97,7 +96,7 @@ ESP32Encoder encoder1;
 ESP32Encoder encoder2;
 ESP32Encoder encoder3;
 ESP32Encoder encoder4;
-ESP32Encoder encoder5;
+// ESP32Encoder encoder5;
 
 void testMotor(int motorDutyCycle, int duration, int cycles)
 {
@@ -233,17 +232,17 @@ void encoder_pulses_callback(rcl_timer_t *timer, int64_t last_call_time)
   {
 
     // Store the encoder pulses in the message
-    msg_encoder_pulses.encoder_1_pulse = -encoder1.getCount();
-    msg_encoder_pulses.encoder_2_pulse = -encoder2.getCount();
-    msg_encoder_pulses.encoder_3_pulse = -encoder3.getCount();
-    msg_encoder_pulses.encoder_4_pulse = -encoder4.getCount();
+    msg_encoder_pulses.encoder_1_pulse = encoder1.getCount();
+    msg_encoder_pulses.encoder_2_pulse = encoder2.getCount();
+    msg_encoder_pulses.encoder_3_pulse = encoder3.getCount();
+    msg_encoder_pulses.encoder_4_pulse = encoder4.getCount();
 
     // Publish the encoder pulses
     RCSOFTCHECK(rcl_publish(&publisher_enc, &msg_encoder_pulses, NULL));
 
     // Publish the lift encoder pulses
-    msg_lift_encoder.data = -encoder5.getCount();
-    RCSOFTCHECK(rcl_publish(&publisher_lift_enc, &msg_lift_encoder, NULL));
+    // msg_lift_encoder.data = encoder5.getCount();
+    // RCSOFTCHECK(rcl_publish(&publisher_lift_enc, &msg_lift_encoder, NULL));
   }
 }
 
@@ -253,38 +252,38 @@ void motor_pwm_callback(const void *msgin)
 
   // Introduce a small error for motor3
   int motor3_pwm = msg_motor_pwm->motor3pwm;
-  Serial.print("Motor 3 PWM: ");
-  Serial.println(motor3_pwm);
+  // Serial.print("Motor 3 PWM: ");
+  // Serial.println(motor3_pwm);
 
-  if (motor3_pwm != 0)
-  {
-    // Apply full motor3 error
-    if (abs(motor3_pwm - MOTOR3_ERROR > 0))
-    {
-      if (motor3_pwm > 0)
-      {
-        motor3_pwm = motor3_pwm - MOTOR3_ERROR;
-      }
-      else
-      {
-        motor3_pwm = motor3_pwm + MOTOR3_ERROR;
-      }
-    }
-    // apply half motor 3 error
-    else
-    {
-      if (motor3_pwm > 0)
-      {
-        motor3_pwm = motor3_pwm - MOTOR3_ERROR / 2;
-      }
-      else
-      {
-        motor3_pwm = motor3_pwm + MOTOR3_ERROR / 2;
-      }
-    }
-  }
-  Serial.print("Motor 3 PWM Corrected: ");
-  Serial.println(motor3_pwm);
+  // if (motor3_pwm != 0)
+  // {
+  //   // Apply full motor3 error
+  //   if (abs(motor3_pwm - MOTOR3_ERROR > 0))
+  //   {
+  //     if (motor3_pwm > 0)
+  //     {
+  //       motor3_pwm = motor3_pwm - MOTOR3_ERROR;
+  //     }
+  //     else
+  //     {
+  //       motor3_pwm = motor3_pwm + MOTOR3_ERROR;
+  //     }
+  //   }
+  //   // apply half motor 3 error
+  //   else
+  //   {
+  //     if (motor3_pwm > 0)
+  //     {
+  //       motor3_pwm = motor3_pwm - MOTOR3_ERROR / 2;
+  //     }
+  //     else
+  //     {
+  //       motor3_pwm = motor3_pwm + MOTOR3_ERROR / 2;
+  //     }
+  //   }
+  // }
+  // Serial.print("Motor 3 PWM Corrected: ");
+  // Serial.println(motor3_pwm);
 
   motorSetSpeed(1, msg_motor_pwm->motor1pwm);
   motorSetSpeed(2, msg_motor_pwm->motor2pwm);
@@ -355,7 +354,7 @@ bool create_entities()
 
   RCCHECK(rclc_executor_init(&executor_sub, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor_sub, &subscriber_pwm, &msg_motor_pwm, motor_pwm_callback, ON_NEW_DATA));
-  RCCHECK(rclc_executor_add_subscription(&executor_sub, &subscriber_lift_pwm, &msg_lift_pwm, lift_motor_callback, ON_NEW_DATA));
+  // RCCHECK(rclc_executor_add_subscription(&executor_sub, &subscriber_lift_pwm, &msg_lift_pwm, lift_motor_callback, ON_NEW_DATA));
 
   return true;
 }
@@ -383,13 +382,13 @@ void setup_hardware()
   encoder2.attachFullQuad(ENC2_A, ENC2_B);
   encoder3.attachFullQuad(ENC3_A, ENC3_B);
   encoder4.attachFullQuad(ENC4_A, ENC4_B);
-  encoder5.attachFullQuad(ENC5_A, ENC5_B);
+  // encoder5.attachFullQuad(ENC5_A, ENC5_B);
 
   encoder1.setCount(0);
   encoder2.setCount(0);
   encoder3.setCount(0);
   encoder4.setCount(0);
-  encoder5.setCount(0);
+  // encoder5.setCount(0);
 
   setupMCPWM();
 }
@@ -408,7 +407,7 @@ void setup()
 
   set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
 
-  Serial.begin(115200);
+  // Serial.begin(115200);
   // set_microros_serial_transports(Serial);
 
   // Initialize the hardware
@@ -482,21 +481,21 @@ void loop()
 //   // motorSetSpeed(5, 0);
 //   // delay(2000);
 
-//   // motorSetSpeed(1, 50);
-//   // motorSetSpeed(2, 50);
-//   // motorSetSpeed(3, 50);
-//   // motorSetSpeed(4, 50);
+//   motorSetSpeed(1, 100);
+//   motorSetSpeed(2, 100);
+//   motorSetSpeed(3, 100);
+//   motorSetSpeed(4, 100);
 //   // motorSetSpeed(5, 50);
 
-//   // // Print encoder values
-//   // Serial.print("Encoder 1: ");
-//   // Serial.print(encoder1.getCount());
-//   // Serial.print(", Encoder 2: ");
-//   // Serial.print(encoder2.getCount());
-//   // Serial.print(", Encoder 3: ");
-//   // Serial.print(encoder3.getCount());
-//   // Serial.print(", Encoder 4: ");
-//   // Serial.println(encoder4.getCount());
-//   // Serial.print(", Encoder 5: ");
-//   // Serial.println(encoder5.getCount());
+//   // Print encoder values
+//   Serial.print("Encoder 1: ");
+//   Serial.print(encoder1.getCount());
+//   Serial.print(", Encoder 2: ");
+//   Serial.print(encoder2.getCount());
+//   Serial.print(", Encoder 3: ");
+//   Serial.print(encoder3.getCount());
+//   Serial.print(", Encoder 4: ");
+//   Serial.println(encoder4.getCount());
+//   Serial.print(", Encoder 5: ");
+//   Serial.println(encoder5.getCount());
 // }
