@@ -6,20 +6,78 @@
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
 
-// ADC Callibration
+#define LineSensorCount 4
+
+// ADC Calibration
 #define DEFAULT_VREF 1100 // Default reference voltage in mV
 // TODO:  Use adc2_vref_to_gpio() to obtain a better estimate
 
-// ADC Characterization struct
-esp_adc_cal_characteristics_t *adc_chars;
-
 /**
- * @brief Setup the Cobra Line Sensor
+ * @brief Class to handle Cobra Line Sensor operations.
  *
- * This function configures the ADC width and attenuation for the line sensors.
- * It also characterizes the ADC at the defaul reference voltage and 12-bit resolution.
+ * This class provides methods to setup the Cobra Line Sensor, update readings,
+ * and get readings in both raw and voltage forms.
  */
-void setupCobraSensor()
+class CobraLineSensor
+{
+public:
+    /**
+     * @brief Constructor for CobraLineSensor.
+     *
+     * Initializes the ADC characterization structure.
+     */
+    CobraLineSensor();
+
+    /**
+     * @brief Setup the Cobra Line Sensor.
+     *
+     * This function configures the ADC width and attenuation for the line sensors.
+     * It also characterizes the ADC at the default reference voltage and 12-bit resolution.
+     */
+    void setup();
+
+    /**
+     * @brief Update the raw readings from the line sensors.
+     *
+     * This function reads the raw ADC values from all line sensors and stores them.
+     */
+    void updateRawReadings();
+
+    /**
+     * @brief Update the voltage readings from the line sensors.
+     *
+     * This function reads the voltage values from all line sensors and stores them.
+     */
+    void updateVoltageReadings();
+
+    /**
+     * @brief Get the voltage reading from a specific line sensor.
+     *
+     * @param index The index of the line sensor (0 to 3).
+     * @return int32_t The voltage reading in millivolts.
+     */
+    int32_t getVoltageReading(int index) const;
+
+    /**
+     * @brief Get the raw reading from a specific line sensor.
+     *
+     * @param index The index of the line sensor (0 to 3).
+     * @return int32_t The raw ADC reading.
+     */
+    int32_t getRawReading(int index) const;
+
+private:
+    esp_adc_cal_characteristics_t *adc_chars; ///< ADC characterization structure
+    int32_t voltageReadings[LineSensorCount]; ///< Array to store voltage readings
+    int32_t rawReadings[LineSensorCount];     ///< Array to store raw ADC readings
+};
+
+CobraLineSensor::CobraLineSensor()
+{
+    adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
+}
+
+void CobraLineSensor::setup()
 {
     // Configure ADC width and attenuation
     adc1_config_width(ADC_WIDTH_BIT_12);                 // 12 bit resolution
@@ -29,43 +87,41 @@ void setupCobraSensor()
     adc1_config_channel_atten(CobraIR4, ADC_ATTEN_11db); // 0-3.6V range
 
     // Characterize ADC at default Vref and 12 bit resolution
-    adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
-
-    // Serial.println("Setup complete. Reading line sensors...");
 }
 
-/**
- * @brief Read raw ADC Value from the specified line sensor channel
- *
- * @param channel ADC channel to read from
- * @return int32_t Raw ADC value
- */
-int32_t readLineSensorRaw(adc1_channel_t channel)
+void CobraLineSensor::updateRawReadings()
 {
-    // Read ADC value
-    int32_t adc_reading = adc1_get_raw(channel);
-
-    return adc_reading;
+    rawReadings[0] = adc1_get_raw(CobraIR1);
+    rawReadings[1] = adc1_get_raw(CobraIR2);
+    rawReadings[2] = adc1_get_raw(CobraIR3);
+    rawReadings[3] = adc1_get_raw(CobraIR4);
 }
 
-/**
- * @brief Read voltage from the specified line sensor channel.
- *
- * This function reads the raw ADC value and converts it to voltage in millivolts.
- *
- * @param channel The ADC channel to read from.
- * @return int32_t The voltage in millivolts.
- */
-int32_t readLineSensorVoltage(adc1_channel_t channel)
+void CobraLineSensor::updateVoltageReadings()
 {
-    // Read ADC value
-    int32_t adc_reading = adc1_get_raw(channel);
+    voltageReadings[0] = esp_adc_cal_raw_to_voltage(adc1_get_raw(CobraIR1), adc_chars);
+    voltageReadings[1] = esp_adc_cal_raw_to_voltage(adc1_get_raw(CobraIR2), adc_chars);
+    voltageReadings[2] = esp_adc_cal_raw_to_voltage(adc1_get_raw(CobraIR3), adc_chars);
+    voltageReadings[3] = esp_adc_cal_raw_to_voltage(adc1_get_raw(CobraIR4), adc_chars);
+}
 
-    // Convert ADC reading to voltage in mV
-    uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+int32_t CobraLineSensor::getVoltageReading(int index) const
+{
+    if (index >= 0 && index < LineSensorCount)
+    {
+        return voltageReadings[index];
+    }
+    return -1; // Return an invalid value if index is out of range
+}
 
-    return voltage;
+int32_t CobraLineSensor::getRawReading(int index) const
+{
+    if (index >= 0 && index < LineSensorCount)
+    {
+        return rawReadings[index];
+    }
+    return -1; // Return an invalid value if index is out of range
 }
 
 #endif // COBRA_LINE_SENSOR_HPP
