@@ -20,17 +20,13 @@ esp_adc_cal_characteristics_t *adc_chars;
  */
 void setupSharpIRsensor()
 {
-    // Configure ADC width and attenuation
-    adc1_config_width(ADC_WIDTH_BIT_12); // 12 bit resolution
-
-    //. Add More Sensors Here when added
-    adc1_config_channel_atten(SharpIR1, ADC_ATTEN_11db); // 0-3.6V range
+    adc2_config_channel_atten(SharpIR1, ADC_ATTEN_11db); // 0-3.6V range
+    adc2_config_channel_atten(SharpIR2, ADC_ATTEN_11db); // 0-3.6V range
 
     // Characterize ADC at default Vref and 12 bit resolution
     adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
+    esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars);
 
-    // Serial.println("Setup complete. Reading line sensors...");
 }
 
 /**
@@ -38,12 +34,16 @@ void setupSharpIRsensor()
  * @param channel ADC channel to read from
  * @return int32_t Raw ADC value
  */
-int32_t readIRSensorRaw(adc1_channel_t channel)
+int32_t readIRSensorRaw(adc2_channel_t channel)
 {
-    // Read ADC value
-    int32_t adc_reading = adc1_get_raw(channel);
+    int raw_value = 0;
+    esp_err_t r = adc2_get_raw(channel, ADC_WIDTH_BIT_12, &raw_value);
+    if (r = ESP_OK)
+    {
+        return raw_value;
+    }
 
-    return adc_reading;
+    return -1; // Error reading ADC
 }
 
 /**
@@ -54,24 +54,25 @@ int32_t readIRSensorRaw(adc1_channel_t channel)
  * @param channel The ADC channel to read from.
  * @return int32_t The voltage in millivolts.
  */
-int32_t readLineSensorVoltage(adc1_channel_t channel)
+int32_t readIRSensorVoltage(adc2_channel_t channel)
 {
-    // Read ADC value
-    int32_t adc_reading = adc1_get_raw(channel);
-
-    // Convert ADC reading to voltage in mV
-    uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-
-    return voltage;
+    int raw_value;
+    esp_err_t r = adc2_get_raw(channel, ADC_WIDTH_BIT_12, &raw_value);
+    if (r == ESP_OK) {
+        return esp_adc_cal_raw_to_voltage(raw_value, adc_chars);
+    }
+    return -1; // Error reading ADC
 }
 
-int8_t getDistanceinCM(adc1_channel_t channel)
+int8_t getDistanceinCM(adc2_channel_t channel)
 {
-    float volts = readIRSensorRaw(channel) * 0.0008056640625; // value from sensor * (3.3/4096)
-
-    int8_t distanceCM = 29.988 * pow(volts, -1.173);
-
-    return distanceCM;
+    int raw_value;
+    esp_err_t r = adc2_get_raw(channel, ADC_WIDTH_BIT_12, &raw_value);
+    if (r == ESP_OK) {
+        float volts = raw_value * 0.0008056640625; // value from sensor * (3.3/4096)
+        return 29.988 * pow(volts, -1.173);
+    }
+    return -1; // Error reading ADC
 }
 
 #endif // SHARPIR_DRIVER_HPP

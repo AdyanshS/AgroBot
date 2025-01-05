@@ -20,10 +20,10 @@
 #define Echo4 40 // GPIO 44 - MTCK
 
 // Sharp Ir Sensor
-#define SharpIR1 ADC1_CHANNEL_3 // GPIO 14
-#define SharpIR2 ADC2_CHANNEL_2 // GPIO 13
-#define SharpIR3 ADC2_CHANNEL_1 // GPIO 12
-#define SharpIR4 ADC2_CHANNEL_0 // GPIO 11  
+#define SharpIR4 ADC1_CHANNEL_3 // GPIO 14
+#define SharpIR1 ADC2_CHANNEL_2 // GPIO 13
+#define SharpIR2 ADC2_CHANNEL_1 // GPIO 12
+#define SharpIR3 ADC2_CHANNEL_0 // GPIO 11  
 
 // Limit Switches
 #define LimitSwitch1 37 // GPIO 37
