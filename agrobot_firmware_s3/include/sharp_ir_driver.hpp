@@ -38,7 +38,7 @@ int32_t readIRSensorRaw(adc2_channel_t channel)
 {
     int raw_value = 0;
     esp_err_t r = adc2_get_raw(channel, ADC_WIDTH_BIT_12, &raw_value);
-    if (r = ESP_OK)
+    if (r == ESP_OK)
     {
         return raw_value;
     }
@@ -64,7 +64,7 @@ int32_t readIRSensorVoltage(adc2_channel_t channel)
     return -1; // Error reading ADC
 }
 
-int8_t getDistanceinCM(adc2_channel_t channel)
+float getDistanceinCM(adc2_channel_t channel)
 {
     int raw_value;
     esp_err_t r = adc2_get_raw(channel, ADC_WIDTH_BIT_12, &raw_value);

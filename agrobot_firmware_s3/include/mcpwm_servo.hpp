@@ -64,7 +64,7 @@ void setupMCPWMServo()
  * @param servo The servo configuration.
  * @return uint32_t The calculated pulse width in microseconds.
  */
-static uint32_t servo_per_degree_init(uint32_t degree_of_rotation, const ServoConfig &servo)
+static uint32_t servo_per_degree_init(float degree_of_rotation, const ServoConfig &servo)
 {
     return (servo.min_pulsewidth + (((servo.max_pulsewidth - servo.min_pulsewidth) * (degree_of_rotation)) / (SERVO_MAX_DEGREE)));
 }
@@ -87,7 +87,7 @@ static uint32_t degree_from_microseconds(uint32_t pulsewidth_us, const ServoConf
  * @param servo The servo configuration.
  * @param angle The angle in degrees to set the servo motor to.
  */
-void setMotorAngle(ServoConfig servo, int angle)
+void setMotorAngle(ServoConfig servo, float angle)
 {
     uint32_t angle_us = servo_per_degree_init(angle, servo);
     mcpwm_set_duty_in_us(servo.unit, servo.timer, servo.operator_id, angle_us);

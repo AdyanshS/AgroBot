@@ -1,0 +1,10 @@
+int32 cobra_ir_1
+int32 cobra_ir_2
+int32 cobra_ir_3
+int32 cobra_ir_4
+float32 ultrasonic_1
+float32 ultrasonic_2
+float32 ultrasonic_3
+float32 ultrasonic_4
+float32 sharp_ir_1
+float32 sharp_ir_2

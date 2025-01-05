@@ -12,6 +12,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MotorPWMs.msg
   msg/EncoderPulses.msg
   msg/ServoAngles.msg
+  msg/SensorDatas.msg
+  msg/LimitSwitchStates.msg
   srv/ServiceExample.srv
   action/ActionExample.action
   DEPENDENCIES
