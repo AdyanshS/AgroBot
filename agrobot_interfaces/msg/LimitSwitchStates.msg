@@ -1,0 +1,5 @@
+bool limit_switch_1
+bool limit_switch_2
+bool limit_switch_3
+bool limit_switch_4
+bool limit_switch_5

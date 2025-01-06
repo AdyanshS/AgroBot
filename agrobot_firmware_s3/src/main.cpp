@@ -18,7 +18,6 @@
 #include "agrobot_interfaces/msg/limit_switch_states.h"
 #include "agrobot_interfaces/msg/sensor_datas.h"
 
-
 // Macros
 #define RCCHECK(fn)              \
   {                              \
@@ -96,16 +95,14 @@ enum states
   AGENT_DISCONNECTED
 } state;
 
-
-
 void sensor_data_callback(rcl_timer_t *timer, int64_t last_call_time)
 {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL)
   {
     // Update Sensor readings
-    lineSensor.updateRawReadings();   // Line Sensor
-    double* distances = getUltrasonicDistancesCM();  // Ultrasonic
+    lineSensor.updateRawReadings();                 // Line Sensor
+    double *distances = getUltrasonicDistancesCM(); // Ultrasonic
 
     // Store the sensor data in the message
     msg_sensor_data.cobra_ir_1 = lineSensor.getRawReading(0);
@@ -126,15 +123,13 @@ void sensor_data_callback(rcl_timer_t *timer, int64_t last_call_time)
     msg_limit_switch_states.limit_switch_2 = limitSwitch2.getState();
     msg_limit_switch_states.limit_switch_3 = limitSwitch3.getState();
 
-
     // Publish the sensor data
     RCSOFTCHECK(rcl_publish(&publisher_sensor, &msg_sensor_data, NULL));
 
     // Publish the limit switch states
     RCSOFTCHECK(rcl_publish(&publisher_limit_switch, &msg_limit_switch_states, NULL));
   }
-  
-  }
+}
 
 void servo_angle_callback(const void *msgin)
 {
@@ -146,9 +141,7 @@ void servo_angle_callback(const void *msgin)
   setMotorAngle(servo3, msg_servo_angles->servo3_angle);
   setMotorAngle(servo4, msg_servo_angles->servo4_angle);
   setMotorAngle(servo5, msg_servo_angles->servo5_angle);
-  
 }
-
 
 bool create_entities()
 {
@@ -222,9 +215,9 @@ void destroy_entities()
 
 void setup_hardware()
 {
-  setupMCPWMServo();  // Setup Servo Motors
-  lineSensor.setup(); // Setup Cobra Line Sensors
-  setupSharpIRsensor(); // Setup Sharp IR Sensors
+  setupMCPWMServo();         // Setup Servo Motors
+  lineSensor.setup();        // Setup Cobra Line Sensors
+  setupSharpIRsensor();      // Setup Sharp IR Sensors
   ultrasonic_sensor_setup(); // Setup Ultrasonic Sensors
 
   // Set the debounce time for the limit switches
@@ -293,4 +286,3 @@ void loop()
     break;
   }
 }
-

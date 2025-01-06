@@ -9,6 +9,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/WheelAngularVel.msg
   msg/ServoAngles.msg
   msg/PIDWheelError.msg
+  msg/SensorDatas.msg
+  msg/LimitSwitchStates.msg
   srv/ServiceExample.srv
   action/ActionExample.action
   DEPENDENCIES
