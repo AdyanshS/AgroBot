@@ -6,7 +6,8 @@
 #include "soc/mcpwm_struct.h"
 #include "soc/mcpwm_periph.h"
 
-#define MOTOR_DRIVER_PWM_FREQUENCY 20000 // 20kHz for MDD10A
+#define MOTOR_DRIVER_PWM_FREQUENCY 20000  // 20kHz for MDD10A
+#define MOTOR_DRIVER2_PWM_FREQUENCY 10000 // 10kHz for FD04A
 #define MIN_SPEED 5
 #define MAX_SPEED 100
 
@@ -25,7 +26,7 @@ MotorConfig motors[] = {
     {MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, MotorDriver1_DIR2}, // Motor 2
     {MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_OPR_A, MotorDriver2_DIR1}, // Motor 3
     {MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_OPR_B, MotorDriver2_DIR2}, // Motor 4
-    {MCPWM_UNIT_1, MCPWM_TIMER_2, MCPWM_OPR_A, MotorDriver3_DIR1}  // Motor 5 - Lift Motor
+    // {MCPWM_UNIT_1, MCPWM_TIMER_2, MCPWM_OPR_A, MotorDriver3_DIR1}  // Motor 5 - Lift Motor
 };
 
 void setupMCPWM()
@@ -54,10 +55,18 @@ void setupMCPWM()
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
     pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
 
+    // New
+    mcpwm_config_t pwm_config2;
+    pwm_config2.frequency = MOTOR_DRIVER2_PWM_FREQUENCY; // 10kHz
+    pwm_config2.cmpr_a = 0;                              // duty cycle of PWMxA = 0%
+    pwm_config2.cmpr_b = 0;                              // duty cycle of PWMxb = 0%
+    pwm_config2.counter_mode = MCPWM_UP_COUNTER;
+    pwm_config2.duty_mode = MCPWM_DUTY_MODE_0;
+
     // Configure PWM timers
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);
     mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_1, &pwm_config);
-    // mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_2, &pwm_config); // Lift Motor
+    // mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_2, &pwm_config2); // Lift Motor
 }
 
 int speed_map(int x, int in_min, int in_max, int out_min, int out_max)
@@ -91,7 +100,7 @@ void motorSetSpeed(uint8_t motor, int8_t speed)
     // Serial.print(" Speed ");
     // Serial.println(speed);
 
-    if (motor < 1 || motor > 5)
+    if (motor < 1 || motor > 4)
         return; // ! Invalid motor number
 
     if (speed == 0)
@@ -99,11 +108,6 @@ void motorSetSpeed(uint8_t motor, int8_t speed)
         motorStop(motor);
         return;
     }
-
-    // if (motor == 3)
-    // {
-    //     speed = speed - 5;
-    // }
 
     // Set the direction and speed of the motor
     MotorConfig &m = motors[motor - 1];
