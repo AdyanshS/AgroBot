@@ -1,5 +1,3 @@
-#ifndef ULTRASONIC_SENSOR_HPP
-#define ULTRASONIC_SENSOR_HPP
 
 #include <Arduino.h>
 #include <HCSR04.h>
@@ -8,11 +6,7 @@
 
 // Set the Ultrasonic Sensor pins
 byte triggerPin = Trig1;
-// byte echoCount = 4;
-// byte *echoPins = new byte[echoCount]{Echo1, Echo2, Echo3, Echo4};
-
 byte echoCount = 2;
-
 byte *echoPins = new byte[echoCount]{Echo1, Echo2};
 
 /**
@@ -37,4 +31,22 @@ double *getUltrasonicDistancesCM()
     return HCSR04.measureDistanceCm();
 }
 
-#endif // ULTRASONIC_SENSOR_HPP
+void setup()
+{
+    Serial.begin(115200);
+    ultrasonic_sensor_setup();
+}
+
+void loop()
+{
+    double *distances = getUltrasonicDistancesCM();
+    for (int i = 0; i < echoCount; i++)
+    {
+        Serial.print("Distance ");
+        Serial.print(i + 1);
+        Serial.print(": ");
+        Serial.print(distances[i]);
+        Serial.println(" cm");
+    }
+    delay(100);
+}

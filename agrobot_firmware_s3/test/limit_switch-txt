@@ -1,0 +1,37 @@
+#include <Arduino.h>
+#include "pin_map.hpp"
+#include "ezButton.h"
+
+ezButton limitSwitch1(LimitSwitch1);
+ezButton limitSwitch2(LimitSwitch2);
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // Set the debounce time for the limit switches
+    limitSwitch1.setDebounceTime(50);
+    limitSwitch2.setDebounceTime(50);
+}
+
+void loop()
+{
+    limitSwitch1.loop();
+    limitSwitch2.loop();
+
+    if (limitSwitch1.isPressed())
+    {
+        Serial.println("Limit switch 1 is pressed");
+    }
+
+    if (limitSwitch2.isPressed())
+    {
+        Serial.println("Limit switch 2 is pressed");
+    }
+
+    // Log the current srtate
+    Serial.println("Limit switch 1 state: " + String(limitSwitch1.getState()));
+    Serial.println("Limit switch 2 state: " + String(limitSwitch2.getState()));
+
+    delay(50);
+}

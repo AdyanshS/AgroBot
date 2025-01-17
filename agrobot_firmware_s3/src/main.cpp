@@ -79,10 +79,10 @@ agrobot_interfaces__msg__ServoAngles msg_servo_angles;
 rclc_executor_t executor_sub;
 
 // Sensor Objects
-CobraLineSensor lineSensor;
+// CobraLineSensor lineSensor;
 ezButton limitSwitch1(LimitSwitch1);
 ezButton limitSwitch2(LimitSwitch2);
-ezButton limitSwitch3(LimitSwitch3);
+// ezButton limitSwitch3(LimitSwitch3);
 
 bool micro_ros_init_successful;
 
@@ -101,27 +101,27 @@ void sensor_data_callback(rcl_timer_t *timer, int64_t last_call_time)
   if (timer != NULL)
   {
     // Update Sensor readings
-    lineSensor.updateRawReadings();                 // Line Sensor
+    // lineSensor.updateRawReadings();                 // Line Sensor
     double *distances = getUltrasonicDistancesCM(); // Ultrasonic
 
     // Store the sensor data in the message
-    msg_sensor_data.cobra_ir_1 = lineSensor.getRawReading(0);
-    msg_sensor_data.cobra_ir_2 = lineSensor.getRawReading(1);
-    msg_sensor_data.cobra_ir_3 = lineSensor.getRawReading(2);
-    msg_sensor_data.cobra_ir_4 = lineSensor.getRawReading(3);
+    // msg_sensor_data.cobra_ir_1 = lineSensor.getRawReading(0);
+    // msg_sensor_data.cobra_ir_2 = lineSensor.getRawReading(1);
+    // msg_sensor_data.cobra_ir_3 = lineSensor.getRawReading(2);
+    // msg_sensor_data.cobra_ir_4 = lineSensor.getRawReading(3);
 
-    msg_sensor_data.sharp_ir_1 = getDistanceinCM(SharpIR1);
-    msg_sensor_data.sharp_ir_2 = getDistanceinCM(SharpIR2);
+    // msg_sensor_data.sharp_ir_1 = getDistanceinCM(SharpIR1);
+    // msg_sensor_data.sharp_ir_2 = getDistanceinCM(SharpIR2);
 
     msg_sensor_data.ultrasonic_1 = distances[0];
     msg_sensor_data.ultrasonic_2 = distances[1];
-    msg_sensor_data.ultrasonic_3 = distances[2];
-    msg_sensor_data.ultrasonic_4 = distances[3];
+    // msg_sensor_data.ultrasonic_3 = distances[2];
+    // msg_sensor_data.ultrasonic_4 = distances[3];
 
     // Store the limit switch states in the message
     msg_limit_switch_states.limit_switch_1 = limitSwitch1.getState();
     msg_limit_switch_states.limit_switch_2 = limitSwitch2.getState();
-    msg_limit_switch_states.limit_switch_3 = limitSwitch3.getState();
+    // msg_limit_switch_states.limit_switch_3 = limitSwitch3.getState();
 
     // Publish the sensor data
     RCSOFTCHECK(rcl_publish(&publisher_sensor, &msg_sensor_data, NULL));
@@ -139,8 +139,8 @@ void servo_angle_callback(const void *msgin)
   setMotorAngle(servo1, msg_servo_angles->servo1_angle);
   setMotorAngle(servo2, msg_servo_angles->servo2_angle);
   setMotorAngle(servo3, msg_servo_angles->servo3_angle);
-  setMotorAngle(servo4, msg_servo_angles->servo4_angle);
-  setMotorAngle(servo5, msg_servo_angles->servo5_angle);
+  // setMotorAngle(servo4, msg_servo_angles->servo4_angle);
+  // setMotorAngle(servo5, msg_servo_angles->servo5_angle);
 }
 
 bool create_entities()
@@ -215,15 +215,15 @@ void destroy_entities()
 
 void setup_hardware()
 {
-  setupMCPWMServo();         // Setup Servo Motors
-  lineSensor.setup();        // Setup Cobra Line Sensors
-  setupSharpIRsensor();      // Setup Sharp IR Sensors
+  setupMCPWMServo(); // Setup Servo Motors
+  // lineSensor.setup();        // Setup Cobra Line Sensors
+  // setupSharpIRsensor();      // Setup Sharp IR Sensors
   ultrasonic_sensor_setup(); // Setup Ultrasonic Sensors
 
   // Set the debounce time for the limit switches
   limitSwitch1.setDebounceTime(50);
   limitSwitch2.setDebounceTime(50);
-  limitSwitch3.setDebounceTime(50);
+  // limitSwitch3.setDebounceTime(50);
 }
 
 void setup()
@@ -231,17 +231,17 @@ void setup()
 
   // Configure WiFi transport
 
-  IPAddress agent_ip(10, 42, 0, 1);
-  // IPAddress agent_ip(192, 168, 0, 192);
-  size_t agent_port = 8888;
+  // IPAddress agent_ip(10, 42, 0, 1);
+  // // IPAddress agent_ip(192, 168, 0, 192);
+  // size_t agent_port = 8888;
 
-  char ssid[] = "adyansh_sakar";
-  char psk[] = "12345678";
+  // char ssid[] = "adyansh_sakar";
+  // char psk[] = "12345678";
 
-  set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
+  // set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
 
-  // Serial.begin(115200);
-  // set_microros_serial_transports(Serial);
+  Serial.begin(115200);
+  set_microros_serial_transports(Serial);
 
   // Initialize the hardware
   setup_hardware();
@@ -273,7 +273,7 @@ void loop()
       rclc_executor_spin_some(&executor_sub, RCL_MS_TO_NS(10));
       limitSwitch1.loop();
       limitSwitch2.loop();
-      limitSwitch3.loop();
+      // limitSwitch3.loop();
     }
     break;
 

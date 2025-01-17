@@ -31,3 +31,21 @@ Check batter percentage
 ```bash
  upower -i /org/freedesktop/UPower/devices/gaming_input_ps_controller_battery_98ob6oe9oacoe2
 ```
+
+### IMPORTANT NOTES
+
+#### Servo Number Connected and Their Angles (0-300)
+
+- **Servo 1**: Servo Claw
+  - Ground facing pose: 180
+  - Full back pose: 115
+  - Front facing pose: 260
+
+- **Servo 2**: Servo Grip
+  - Opened Pose: 180
+  - Closed Pose: 150
+
+- **Servo 3**: Servo Arm
+  - Extended Pose: 300
+  - Retracted Pose: 180
+  
