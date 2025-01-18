@@ -54,4 +54,9 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  ${PROJECT_NAME}/lift_motor_control.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()

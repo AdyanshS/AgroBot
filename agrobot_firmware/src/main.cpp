@@ -264,7 +264,7 @@ void lift_motor_callback(const void *msgin)
 {
   const std_msgs__msg__Int32 *msg_lift_pwm = (const std_msgs__msg__Int32 *)msgin;
   liftMotor.runMotor(msg_lift_pwm->data);
-  Serial.println(msg_lift_pwm->data);
+  // Serial.println(msg_lift_pwm->data);
 }
 
 bool create_entities()
@@ -367,7 +367,7 @@ void setup_hardware()
 
 void setup()
 {
-
+  //   Serial.println("Setup");
   // Configure WiFi transport
 
   IPAddress agent_ip(10, 42, 0, 1);
@@ -386,6 +386,10 @@ void setup()
   setup_hardware();
 
   state = WAITING_AGENT;
+
+  // micro_ros_init_successful = create_entities();
+
+  Serial.println("Setup done");
 }
 
 void loop()
@@ -422,6 +426,9 @@ void loop()
   default:
     break;
   }
+
+  // rclc_executor_spin_some(&executor_pub, RCL_MS_TO_NS(10));
+  // rclc_executor_spin_some(&executor_sub, RCL_MS_TO_NS(10));
 }
 
 //. FOR TESTING PURPOSES

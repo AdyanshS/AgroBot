@@ -17,14 +17,14 @@ class LiftMotorControlNode(Node):
         self.create_subscription(
             Int32, 'lift_direction', self.lift_direction_callback, 10)
 
-        self.create_publisher(
+        self.lift_motor_pwm_publisher = self.create_publisher(
             Int32, 'lift_motor_pwm', 10)
 
         self.limit_switch_1 = False
         self.limit_switch_2 = False
         self.lift_direction = 0
 
-        self.lift_motor_pwm = 200  # PWM value for lift motor
+        self.lift_motor_pwm = 150  # PWM value for lift motor
 
         self.lift_motor_timer = self.create_timer(
             0.1, self.lift_motor_timer_callback)
@@ -44,7 +44,7 @@ class LiftMotorControlNode(Node):
             self.publish_lift_motor_pwm(0)
         elif self.lift_direction == 1:
             # Go up
-            self.publish_lift_motor_pwm(self.lift_motor_pwm)
+            self.publish_lift_motor_pwm(200)
             self.lift_direction = 0  # Reset direction after processing
         elif self.lift_direction == -1:
             # Go down
@@ -69,3 +69,7 @@ def main(args=None):
     rclpy.spin(lift_motor_control_node)
 
     rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

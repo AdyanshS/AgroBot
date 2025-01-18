@@ -31,7 +31,7 @@ class ServoControl(Node):
         self.arm_angle: float = 0.0
 
         self.claw_servo_limits: tuple = (115, 260)
-        self.grip_servo_limits: tuple = (150, 180)
+        self.grip_servo_limits: tuple = (145, 180)
         self.arm_servo_limits: tuple = (180, 300)
 
     def claw_callback(self, msg: Float32):
@@ -49,9 +49,12 @@ class ServoControl(Node):
     def servo_angles_timer_callback(self):
         """ Timer callback to publish servo angles """
 
-        self.servo_angles.claw = clip(self.claw_angle, *self.claw_servo_limits)
-        self.servo_angles.grip = clip(self.grip_angle, *self.grip_servo_limits)
-        self.servo_angles.arm = clip(self.arm_angle, *self.arm_servo_limits)
+        self.servo_angles.servo1_angle = clip(
+            self.claw_angle, *self.claw_servo_limits)
+        self.servo_angles.servo2_angle = clip(
+            self.grip_angle, *self.grip_servo_limits)
+        self.servo_angles.servo3_angle = clip(
+            self.arm_angle, *self.arm_servo_limits)
 
         self.servo_angles_pub.publish(self.servo_angles)
 
