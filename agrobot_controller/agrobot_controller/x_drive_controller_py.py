@@ -203,8 +203,6 @@ class XDriveController(Node):
         w_dot, x_dot, y_dot = self.forward_kinematics(
             self.current_wheel_ang_vel)
 
-        print(f"Robot Velocities: {x_dot}, {y_dot}, {w_dot}")
-
         # * Get the current time and calculate the `dt` (time difference)
         current_time = self.get_clock().now()
         dt = (current_time - self.last_time).nanoseconds / 1e9
