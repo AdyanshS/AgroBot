@@ -11,6 +11,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/PIDWheelError.msg
   msg/SensorDatas.msg
   msg/LimitSwitchStates.msg
+  msg/Xywh.msg
+  msg/XyXy.msg
+  msg/YoloResults.msg
   srv/ServiceExample.srv
   action/ActionExample.action
   DEPENDENCIES
