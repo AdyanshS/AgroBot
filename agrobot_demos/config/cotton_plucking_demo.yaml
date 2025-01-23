@@ -1,0 +1,8 @@
+cotton_plucking:
+  ros__parameters:
+    example_param: "abc"
+
+cotton_plucking:
+  ros__parameters:
+    example_param: "abc"
+
