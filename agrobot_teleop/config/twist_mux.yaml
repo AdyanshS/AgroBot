@@ -4,11 +4,11 @@
       navigation:
         topic: cmd_vel
         timeout: 0.5
-        priority: 150
+        priority: 100
       
       joystick:
         topic: cmd_vel/joy
         timeout: 0.5
-        priority: 125
+        priority: 150
 
       
