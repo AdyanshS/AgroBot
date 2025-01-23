@@ -105,7 +105,7 @@ def generate_launch_description():
     ld = LaunchDescription()
     # Nodes
     # ld.add_action(usb_cam_node)
-    # ld.add_action(yolo_results_node)
+    ld.add_action(yolo_results_node)
 
     # Launches
     ld.add_action(orbec_gemini_launch)
