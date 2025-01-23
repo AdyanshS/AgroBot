@@ -1,6 +1,6 @@
 yolo_results:
   ros__parameters:
-    use_compressed_image: False
+    use_compressed_image: True
     show_image: True
     model_name: 'yolo11n.pt'
     iou: 0.3

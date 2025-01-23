@@ -19,7 +19,7 @@ class ObjectDetectionYOLO(Node):
     def __init__(self):
         super().__init__('object_detection_YOLO')
 
-        self.declare_parameter('use_compressed_image', False)
+        self.declare_parameter('use_compressed_image', True)
         self.declare_parameter('show_image', True)
         self.declare_parameter('model_name', 'yolo11n.pt')
         self.declare_parameter('iou', 0.3)
@@ -34,7 +34,7 @@ class ObjectDetectionYOLO(Node):
         if self.use_compressed_image:
             self.compressed_subscription = self.create_subscription(
                 CompressedImage,
-                'image_raw/compressed',
+                '/gemini_e/color/image_raw/compressed',
                 self.image_callback,
                 10)
 
@@ -123,7 +123,10 @@ class ObjectDetectionYOLO(Node):
                 xywh_msg.height = xywh[3]
 
                 # Calculate the center_y_to_track and store it in the list
-                center_y_to_track = xywh[1] - (xywh[3] // 2)
+                # Top Line middle point
+                # center_y_to_track = xywh[1] - (xywh[3] // 2)
+                center_y_to_track = xywh[1] - 0
+
                 center_y_to_track_points.append(center_y_to_track)
 
                 yolo_result_msg.xywh.append(xywh_msg)

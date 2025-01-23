@@ -54,4 +54,9 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  ${PROJECT_NAME}/object_tracking.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
