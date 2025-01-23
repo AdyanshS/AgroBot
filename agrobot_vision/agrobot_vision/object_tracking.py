@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+from warp import Float
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool, Int32
 from agrobot_interfaces.msg import YoloResults
 from simple_pid import PID
 from numpy import clip
@@ -78,7 +80,6 @@ class ObjectTrackingNode(Node):
 
         self.linearx = 0.0
         self.lineary = 0.0
-        self.linearz = 0.0
         self.angularz = 0.0
 
         # Subscribe to YOLO results topic
@@ -89,41 +90,32 @@ class ObjectTrackingNode(Node):
             10
         )
 
-        # Publisher for drone control commands
+        self.tracking_subscription = self.create_subscription(
+            Bool,
+            'start_object_tracking',
+            self.tracking_callback,
+            10
+        )
+
+        # Publisher
         self.publisher = self.create_publisher(Twist, 'control', 10)
+        self.lift_command_publisher = self.create_publisher(
+            Int32, 'lift_direction', 10)
 
-        self.create_timer(0.1, self.vel_slow_pub)
+        self.do_tracking = False
 
-        self.get_logger().info("Drone Controller Node Initialized")
+        self.get_logger().info("Object Tracking Node Initialized.")
 
-    def vel_slow_pub(self):
+    def tracking_callback(self, msg: Bool):
+        self.do_tracking = msg.data
 
-        # print(self.linearx, self.lineary, self.linearz, self.angularz)
-
-        # Limit linear velocity to maximum value
-        self.linearx = clip(
-            self.linearx, -self.max_velocity, self.max_velocity)
-        self.lineary = clip(
-            self.lineary, -self.max_velocity, self.max_velocity)
-        self.linearz = clip(
-            self.linearz, -self.max_velocity, self.max_velocity)
-
-        twist_msg = Twist()
-
-        twist_msg.linear.x = self.linearx
-        twist_msg.linear.y = self.lineary
-        twist_msg.linear.z = self.linearz
-        twist_msg.angular.z = self.angularz
-
-        print(self.linearx, self.lineary, self.linearz, self.angularz)
-
-        # self.get_logger().info(f"Publishing Twist message: {twist_msg}")
-
-        self.publisher.publish(twist_msg)
-
-    def yolo_callback(self, msg):
+    def yolo_callback(self, msg: YoloResults):
         target_indices = [i for i, class_id in enumerate(
             msg.class_ids) if class_id == self.target_class_id]
+
+        if not self.do_tracking:
+            # . If tracking is not enabled, do nothing
+            return
 
         if not target_indices:
             # If no target is detected, sweep in angular z
@@ -157,11 +149,11 @@ class ObjectTrackingNode(Node):
         control_x = self.pid_x(error_x)
         control_z = self.pid_z(error_z)
 
-        self.get_logger().warn(
-            f"Controls: Area: {control_area}, "
-            # f"X: {control_x},"
-            # f"Z: {control_z}"
-        )
+        # self.get_logger().warn(
+        # f"Controls: Area: {control_area}, "
+        # f"X: {control_x},"
+        # f"Z: {control_z}"
+        # )
 
         # Check if all conditions are within thresholds
         within_threshold_area = abs(error_area) <= self.threshold_area
@@ -170,22 +162,41 @@ class ObjectTrackingNode(Node):
 
         # self.get_logger().info(f"Within Thresholds: Area: {within_threshold_area}, X: {within_threshold_x}, Z: {within_threshold_z}")
 
-        if within_threshold_area and within_threshold_x and within_threshold_z:
+        if within_threshold_z:
+            # Publish lift direction
+            self.publish_lift_direction(0.0)
+        else:
+            # Publish lift direction based on control z
+            self.publish_lift_direction(control_z)
+
+        if within_threshold_area and within_threshold_x:
             # Publish zero velocities if all conditions are within thresholds
             self.linearx = 0.0
             self.lineary = 0.0
-            self.linearz = 0.0
             self.angularz = 0.0
-            self.get_logger().info("All conditions met, stopping drone.")
-            rclpy.shutdown()
+            self.get_logger().info(
+                "\033[93mAll conditions met, Stopping the robot\033[0m", once=True)
         else:
 
             # Apply control signals to Twist message, with threshold checks
-            self.linearx = -control_area if not within_threshwold_area else 0.0
+            self.linearx = -control_area if not within_threshold_area else 0.0
             self.lineary = 0.0  # Assuming no lateral movement control needed
-            self.linearz = -control_z if not within_threshold_z else 0.0
             self.angularz = -control_x if not within_threshold_x else 0.0
-            self.get_logger().info("Publishing control signals...")
+            self.get_logger().info(
+                "\033[92mPublishing control signals...\033[0m", throttle_duration_sec=2.5)
+
+        # Publish the Twist Message
+        self.publish_twist(self.linearx, self.lineary, self.angularz)
+
+    def publish_twist(self, linearx, lineary, angularz):
+        twist_msg = Twist()
+        twist_msg.linear.x = clip(
+            linearx, -self.max_velocity, self.max_velocity)
+        twist_msg.linear.y = clip(
+            lineary, -self.max_velocity, self.max_velocity)
+        twist_msg.angular.z = clip(
+            angularz, -self.max_velocity, self.max_velocity)
+        self.publisher.publish(twist_msg)
 
     def sweep(self):
         # Create Twist message for sweeping in angular z
@@ -195,7 +206,13 @@ class ObjectTrackingNode(Node):
         self.angularz = self.sweep_angular_z
 
         # Publish sweep command
-        self.get_logger().info("Sweeping to find target object...")
+        self.get_logger().info("Sweeping to find target object...", throttle_duration_sec=2.5)
+
+    def publish_lift_direction(self, value: float):
+        # publish 1 if control z is positive, -1 if control z is negative, 0 if control z is zero
+        msg = Int32()
+        msg.data = 1 if value > 0 else -1 if value < 0 else 0
+        self.lift_command_publisher.publish(msg)
 
 
 def main(args=None):
