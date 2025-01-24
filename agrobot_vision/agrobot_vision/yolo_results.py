@@ -19,9 +19,9 @@ class ObjectDetectionYOLO(Node):
     def __init__(self):
         super().__init__('object_detection_YOLO')
 
-        self.declare_parameter('use_compressed_image', True)
+        self.declare_parameter('use_compressed_image', False)
         self.declare_parameter('show_image', True)
-        self.declare_parameter('model_name', 'cotton_plant_model.pt')
+        self.declare_parameter('model_name', 'cotton_plant_model_jetson.engine')
         self.declare_parameter('iou', 0.3)
         self.declare_parameter('conf', 0.3)
 
@@ -34,14 +34,14 @@ class ObjectDetectionYOLO(Node):
         if self.use_compressed_image:
             self.compressed_subscription = self.create_subscription(
                 CompressedImage,
-                '/gemini_e/color/image_raw/compressed',
+                'gemini_e/color/image_raw/compressed',
                 self.image_callback,
                 10)
 
         if not self.use_compressed_image:
             self.subscription = self.create_subscription(
                 Image,
-                'image_raw',
+                'gemini_e/color/image_raw',
                 self.image_callback,
                 10
             )
@@ -59,8 +59,11 @@ class ObjectDetectionYOLO(Node):
             10
         )
 
+        # self.model = YOLO(
+        #     f'/home/sr09/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}')
         self.model = YOLO(
-            f'/home/sr09/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}')
+            f'/home/sakar1/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}'
+        )
 
         # Set the IOU and Confidence threshold
         self.iou = self.get_parameter('iou').value
@@ -85,7 +88,7 @@ class ObjectDetectionYOLO(Node):
 
         # Perform object detection and stores the results
         results = self.model.track(
-            img, persist=True, conf=self.conf, iou=self.iou)
+            img, persist=True, conf=self.conf, iou=self.iou,  verbose=False)
 
         yolo_result_msg = YoloResults()  # YoloResults message to store the results
         contour_areas = []  # List to store contour areas
@@ -219,13 +222,13 @@ class ObjectDetectionYOLO(Node):
         cv2.waitKey(1)
 
         # Convert the annotated image to a ROS message
-        bridge = cv_bridge.CvBridge()
-        annotated_frame_msg = bridge.cv2_to_compressed_imgmsg(
-            annotated_frame, dst_format='png')
+        # bridge = cv_bridge.CvBridge()
+        # annotated_frame_msg = bridge.cv2_to_compressed_imgmsg(
+        #     annotated_frame, dst_format='png')
 
         # Publish the results
         self.yolo_result_publisher.publish(yolo_result_msg)
-        self.publisher.publish(annotated_frame_msg)
+        # self.publisher.publish(annotated_frame_msg)
 
 
 def main(args=None):
