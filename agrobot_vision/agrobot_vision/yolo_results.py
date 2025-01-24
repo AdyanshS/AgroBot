@@ -21,7 +21,7 @@ class ObjectDetectionYOLO(Node):
 
         self.declare_parameter('use_compressed_image', True)
         self.declare_parameter('show_image', True)
-        self.declare_parameter('model_name', 'yolo11n.pt')
+        self.declare_parameter('model_name', 'cotton_plant_model.pt')
         self.declare_parameter('iou', 0.3)
         self.declare_parameter('conf', 0.3)
 
@@ -59,8 +59,6 @@ class ObjectDetectionYOLO(Node):
             10
         )
 
-        # self.model = YOLO(
-        #     r'/home/sr09/agrobot_ws/src/agrobot_vision/agrobot_vision/model/yolo11n.pt')
         self.model = YOLO(
             f'/home/sr09/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}')
 
@@ -89,20 +87,11 @@ class ObjectDetectionYOLO(Node):
         results = self.model.track(
             img, persist=True, conf=self.conf, iou=self.iou)
 
-        # Create a YoloResults message to store the results
-        yolo_result_msg = YoloResults()
-
-        # List to store contour areas
-        contour_areas = []
-
-        # List to store differences
-        differences = []
-
-        # List to store z_differences
-        z_differences = []
-
-        # List to store center_y_to_track_points
-        center_y_to_track_points = []
+        yolo_result_msg = YoloResults()  # YoloResults message to store the results
+        contour_areas = []  # List to store contour areas
+        differences = []  # List to store differences
+        z_differences = []  # List to store z_differences
+        center_y_to_track_points = []  # List to store center_y_to_track_points
 
         # Calculate the  line's x-coordinate
         line_x = img.shape[1] // 2
@@ -232,7 +221,7 @@ class ObjectDetectionYOLO(Node):
         # Convert the annotated image to a ROS message
         bridge = cv_bridge.CvBridge()
         annotated_frame_msg = bridge.cv2_to_compressed_imgmsg(
-            annotated_frame, dst_format='jpeg')
+            annotated_frame, dst_format='png')
 
         # Publish the results
         self.yolo_result_publisher.publish(yolo_result_msg)
