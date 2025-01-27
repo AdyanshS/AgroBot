@@ -1,0 +1,33 @@
+yolo_results:
+  ros__parameters:
+    use_compressed_image: False
+    show_image: True
+    model_name: 'cotton_plant_model_jetson.engine'
+    iou: 0.3
+    conf: 0.3
+
+object_tracking:
+  ros__parameters:
+    desired_contour_area: 70000
+    desired_x_difference: 0
+    desired_z_difference: 0
+
+    kp_area: 0.0005
+    ki_area: 0.0
+    kd_area: 0.0
+
+    kp_x: 0.1
+    ki_x: 0.0001
+    kd_x: 0.001
+
+    kp_z: 0.1
+    ki_z: 0.0001
+    kd_z: 0.001
+
+    threshold_area: 10000
+    threshold_x: 10
+    threshold_z: 10
+
+    target_class_id: 39
+    sweep_angular_z: 1.0
+    max_velocity: 0.5

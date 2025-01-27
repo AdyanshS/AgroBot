@@ -59,20 +59,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    lift_motor_control = Node(
-        package='agrobot_hardware',
-        executable='lift_motor_control.py',
-        name='lift_motor_control',
-        output='screen'
-    )
-
-    servo_control = Node(
-        package='agrobot_hardware',
-        executable='servo_control.py',
-        name='servo_control',
-        output='screen'
-    )
-
     joy_control = Node(
         package='agrobot_teleop',
         executable='joy_control.py',
@@ -85,8 +71,6 @@ def generate_launch_description():
     ld.add_action(use_sim_time_arg)
     # Nodes
     ld.add_action(twist_mux_node)
-    ld.add_action(lift_motor_control)
-    ld.add_action(servo_control)
     ld.add_action(joy_control)
     # ld.add_action(static_tf)
     # Launch Files
