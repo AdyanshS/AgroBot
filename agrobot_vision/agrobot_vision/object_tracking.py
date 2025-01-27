@@ -32,9 +32,9 @@ class ObjectTrackingNode(Node):
         self.declare_parameter('threshold_z', 10)
         self.declare_parameter('target_class_id', 39)  # Class ID to track
         # Angular z velocity for sweeping
-        self.declare_parameter('sweep_angular_z', 24)
+        self.declare_parameter('sweep_angular_z', 1.0)
         # Maximum linear velocity (m/s
-        self.declare_parameter('max_velocity', 50.0)
+        self.declare_parameter('max_velocity', 0.5)
 
         # Get parameters
         self.desired_contour_area = self.get_parameter(
@@ -118,11 +118,13 @@ class ObjectTrackingNode(Node):
 
         if not self.do_tracking:
             # . If tracking is not enabled, do nothing
+            self.publish_completed(False)
             return
 
         if not target_indices:
             # If no target is detected, sweep in angular z
             self.sweep()
+            self.publish_completed(False)
             return
 
         # Sort indices based on contour area in descending order
@@ -165,14 +167,15 @@ class ObjectTrackingNode(Node):
 
         # self.get_logger().info(f"Within Thresholds: Area: {within_threshold_area}, X: {within_threshold_x}, Z: {within_threshold_z}")
 
-        if within_threshold_z:
-            # Publish lift direction
-            self.publish_lift_direction(0.0)
-        else:
-            # Publish lift direction based on control z
-            self.publish_lift_direction(control_z)
+        # if within_threshold_z:
+        #     # Publish lift direction
+        #     self.publish_lift_direction(0.0)
+        # else:
+        #     # Publish lift direction based on control z
+        #     self.publish_lift_direction(control_z)
 
-        if within_threshold_area and within_threshold_x:
+        # if within_threshold_area and within_threshold_x:
+        if within_threshold_area:
             # Publish zero velocities if all conditions are within thresholds
             self.linearx = 0.0
             self.lineary = 0.0
