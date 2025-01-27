@@ -27,7 +27,7 @@ class LiftMotorControlNode(Node):
         self.lift_motor_pwm = 150  # PWM value for lift motor
 
         self.lift_motor_timer = self.create_timer(
-            0.1, self.lift_motor_timer_callback)
+            0.3, self.lift_motor_timer_callback)
 
     def limit_switch_states_callback(self, msg: LimitSwitchStates):
         """Callback for limit switch states subscriber"""

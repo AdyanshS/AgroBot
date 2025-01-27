@@ -98,9 +98,12 @@ class ObjectTrackingNode(Node):
         )
 
         # Publisher
-        self.publisher = self.create_publisher(Twist, 'control', 10)
+        self.publisher = self.create_publisher(
+            Twist, 'control', 10)
         self.lift_command_publisher = self.create_publisher(
             Int32, 'lift_direction', 10)
+        self.completed_publisher = self.create_publisher(
+            Bool, 'object_tracking_completed', 10)
 
         self.do_tracking = False
 
@@ -174,6 +177,7 @@ class ObjectTrackingNode(Node):
             self.linearx = 0.0
             self.lineary = 0.0
             self.angularz = 0.0
+            self.publish_completed(True)
             self.get_logger().info(
                 "\033[93mAll conditions met, Stopping the robot\033[0m", once=True)
         else:
@@ -182,6 +186,7 @@ class ObjectTrackingNode(Node):
             self.linearx = -control_area if not within_threshold_area else 0.0
             self.lineary = 0.0  # Assuming no lateral movement control needed
             self.angularz = -control_x if not within_threshold_x else 0.0
+            self.publish_completed(False)
             self.get_logger().info(
                 "\033[92mPublishing control signals...\033[0m", throttle_duration_sec=2.5)
 
@@ -213,6 +218,11 @@ class ObjectTrackingNode(Node):
         msg = Int32()
         msg.data = 1 if value > 0 else -1 if value < 0 else 0
         self.lift_command_publisher.publish(msg)
+
+    def publish_completed(self, value: bool):
+        msg = Bool()
+        msg.data = value
+        self.completed_publisher.publish(msg)
 
 
 def main(args=None):

@@ -26,9 +26,9 @@ class ServoControl(Node):
             0.1, self.servo_angles_timer_callback)
 
         self.servo_angles = ServoAngles()
-        self.claw_angle: float = 0.0
-        self.grip_angle: float = 0.0
-        self.arm_angle: float = 0.0
+        self.claw_angle: float = 200.0
+        self.grip_angle: float = 160.0
+        self.arm_angle: float = 240.0
 
         self.claw_servo_limits: tuple = (115, 260)
         self.grip_servo_limits: tuple = (145, 180)
