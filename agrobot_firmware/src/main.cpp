@@ -10,7 +10,7 @@
 #include <ESP32Encoder.h>
 #include "pin_map.hpp"
 #include "motor_driver_mcpwm.hpp"
-#include "motor_driver.hpp"
+// #include "motor_driver.hpp"
 
 #include <std_msgs/msg/int32.h>
 #include <agrobot_interfaces/msg/encoder_pulses.h>
@@ -100,7 +100,7 @@ ESP32Encoder encoder4;
 ESP32Encoder encoder5;
 
 // Lift Motor
-MotorDriver liftMotor(MotorDriver3_DIR1, MotorDriver3_PWM1, 255, 0, 0, &encoder5, 0);
+// MotorDriver liftMotor(MotorDriver3_DIR1, MotorDriver3_PWM1, 255, 0, 0, &encoder5, 0);
 
 void testMotor(int motorDutyCycle, int duration, int cycles)
 {
@@ -263,7 +263,7 @@ void motor_pwm_callback(const void *msgin)
 void lift_motor_callback(const void *msgin)
 {
   const std_msgs__msg__Int32 *msg_lift_pwm = (const std_msgs__msg__Int32 *)msgin;
-  liftMotor.runMotor(msg_lift_pwm->data);
+  // liftMotor.runMotor(msg_lift_pwm->data);
   // Serial.println(msg_lift_pwm->data);
 }
 
@@ -361,8 +361,8 @@ void setup_hardware()
   encoder5.setCount(0);
 
   setupMCPWM();
-  liftMotor.setup();
-  liftMotor.runMotor(0);
+  // liftMotor.setup();
+  // liftMotor.runMotor(0);
 }
 
 void setup()
@@ -370,17 +370,18 @@ void setup()
   //   Serial.println("Setup");
   // Configure WiFi transport
 
-  IPAddress agent_ip(10, 42, 0, 1);
-  // IPAddress agent_ip(192, 168, 0, 192);
-  size_t agent_port = 8888;
+  // IPAddress agent_ip(10, 42, 0, 1);
+  // // IPAddress agent_ip(192, 168, 0, 192);
+  // size_t agent_port = 8888;
 
-  char ssid[] = "adyansh_sakar";
-  char psk[] = "12345678";
+  // // char ssid[] = "jetson_1";
+  // char ssid[] = "adyansh_sakar";
 
-  set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
+  // char psk[] = "12345678";
 
+  // set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
+  set_microros_serial_transports(Serial);
   Serial.begin(115200);
-  // set_microros_serial_transports(Serial);
 
   // Initialize the hardware
   setup_hardware();
@@ -430,79 +431,3 @@ void loop()
   // rclc_executor_spin_some(&executor_pub, RCL_MS_TO_NS(10));
   // rclc_executor_spin_some(&executor_sub, RCL_MS_TO_NS(10));
 }
-
-//. FOR TESTING PURPOSES
-// void loop()
-// {
-// testMotor(50, 2000, 3);
-
-// motorSetSpeed(1, 50);
-// delay(2000);
-// motorSetSpeed(1, 0);
-// delay(2000);
-
-// motorSetSpeed(2, 50);
-// delay(2000);
-// motorSetSpeed(2, 0);
-// delay(2000);
-
-// motorSetSpeed(3, 50);
-// delay(2000);
-// motorSetSpeed(3, 0);
-// delay(2000);
-
-// motorSetSpeed(3, -50);
-// delay(2000);
-// motorSetSpeed(3, 0);
-// delay(2000);
-
-// motorSetSpeed(4, 50);
-// delay(2000);
-// motorSetSpeed(4, 0);
-// delay(2000);
-
-// motorSetSpeed(5, 50);
-// delay(1000);
-// motorSetSpeed(5, 0);
-// delay(1000);
-
-// motorSetSpeed(5, -50);
-// delay(1000);
-// motorSetSpeed(5, 0);
-// delay(1000);
-
-// liftMotor.runMotor(0);
-// delay(500);
-// liftMotor.runMotor(0);
-// delay(500);
-
-// liftMotor.runMotor(-125);
-// delay(500);
-// liftMotor.runMotor(0);
-// delay(500);
-
-// digitalWrite(MotorDriver3_DIR1, HIGH);
-// analogWrite(MotorDriver3_PWM1, 255);
-// delay(500);
-// digitalWrite(MotorDriver3_DIR1, LOW);
-// analogWrite(MotorDriver3_PWM1, 255);
-// delay(500);
-
-// motorSetSpeed(1, 100);
-// motorSetSpeed(2, 100);
-// motorSetSpeed(3, 100);
-// motorSetSpeed(4, 100);
-// motorSetSpeed(5, 50);
-
-// Print encoder values
-// Serial.print("Encoder 1: ");
-// Serial.print(encoder1.getCount());
-// Serial.print(", Encoder 2: ");
-// Serial.print(encoder2.getCount());
-// Serial.print(", Encoder 3: ");
-// Serial.print(encoder3.getCount());
-// Serial.print(", Encoder 4: ");
-// Serial.println(encoder4.getCount());
-// Serial.print(", Encoder 5: ");
-// Serial.println(encoder5.getCount());
-// }
