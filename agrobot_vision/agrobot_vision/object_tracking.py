@@ -15,26 +15,29 @@ class ObjectTrackingNode(Node):
         super().__init__('object_tracking')
 
         # Declare parameters for desired values and PID coefficients
-        self.declare_parameter('desired_contour_area', 70000)  # 70000
+        self.declare_parameter('desired_contour_area', 3000)
         self.declare_parameter('desired_x_difference', 0)
         self.declare_parameter('desired_z_difference', 0)
+
         self.declare_parameter('kp_area', 0.0005)
         self.declare_parameter('ki_area', 0.0)
         self.declare_parameter('kd_area', 0.0)
-        self.declare_parameter('kp_x', 0.1)
+
+        self.declare_parameter('kp_x', 0.005)
         self.declare_parameter('ki_x', 0.0001)
         self.declare_parameter('kd_x', 0.001)
+
         self.declare_parameter('kp_z', 0.1)
         self.declare_parameter('ki_z', 0.0001)
         self.declare_parameter('kd_z', 0.001)
-        self.declare_parameter('threshold_area', 10000)
+        self.declare_parameter('threshold_area', 500)
         self.declare_parameter('threshold_x', 10)
         self.declare_parameter('threshold_z', 10)
-        self.declare_parameter('target_class_id', 39)  # Class ID to track
+        self.declare_parameter('target_class_id', 0)  # Class ID to track
         # Angular z velocity for sweeping
-        self.declare_parameter('sweep_angular_z', 1.0)
+        self.declare_parameter('sweep_angular_z', 0.3)
         # Maximum linear velocity (m/s
-        self.declare_parameter('max_velocity', 0.5)
+        self.declare_parameter('max_velocity', 0.35)
 
         # Get parameters
         self.desired_contour_area = self.get_parameter(
@@ -85,7 +88,7 @@ class ObjectTrackingNode(Node):
         # Subscribe to YOLO results topic
         self.subscription = self.create_subscription(
             YoloResults,
-            'yolo_results_object',
+            'yolo_results',
             self.yolo_callback,
             10
         )
@@ -99,13 +102,13 @@ class ObjectTrackingNode(Node):
 
         # Publisher
         self.publisher = self.create_publisher(
-            Twist, 'control', 10)
+            Twist, 'cmd_vel', 10)
         self.lift_command_publisher = self.create_publisher(
             Int32, 'lift_direction', 10)
         self.completed_publisher = self.create_publisher(
             Bool, 'object_tracking_completed', 10)
 
-        self.do_tracking = False
+        self.do_tracking = True
 
         self.get_logger().info("Object Tracking Node Initialized.")
 
@@ -141,24 +144,33 @@ class ObjectTrackingNode(Node):
         # self.get_logger().error(f"Contour Area: {contour_area}, X Difference: {x_difference}, Z Difference: {z_difference}")
 
         # Calculate errors
-        error_area = self.desired_contour_area - contour_area
-        error_x = self.desired_x_difference - x_difference
+        error_area = (self.desired_contour_area - contour_area)
+        error_x = x_difference - self.desired_x_difference
         error_z = self.desired_z_difference - z_difference
 
-        self.get_logger().info(f"Errors: Area: {error_area}",
-                               # "X: {error_x}, Z: {error_z}"
-                               )
+        self.get_logger().error(f"Errors: Area: {error_area} \n"
+                                "X: {error_x}, \n Z: {error_z}",
+                                throttle_duration_sec=1.0
+                                )
 
         # Compute control signals using PID controllers
-        control_area = self.pid_area(error_area)
+        control_area = -self.pid_area(error_area)
         control_x = self.pid_x(error_x)
         control_z = self.pid_z(error_z)
 
-        # self.get_logger().warn(
-        # f"Controls: Area: {control_area}, "
-        # f"X: {control_x},"
-        # f"Z: {control_z}"
+        # id_target = msg.tracking_id[target_index]
+
+        # self.get_logger().info(
+        #     f"\033[93m\nTarget ID: {id_target}\033[0m",
+        #     throttle_duration_sec=1.0
         # )
+
+        self.get_logger().info(
+            f"\033[91m \nControls: Area: {control_area}\033[0m, "
+            f"\033[92m\n X:{control_x}\033[0m, "
+            f"\033[94m\n Z:{control_z}\033[0m",
+            throttle_duration_sec=1.0
+        )
 
         # Check if all conditions are within thresholds
         within_threshold_area = abs(error_area) <= self.threshold_area
@@ -175,20 +187,21 @@ class ObjectTrackingNode(Node):
         #     self.publish_lift_direction(control_z)
 
         # if within_threshold_area and within_threshold_x:
-        if within_threshold_area:
+        if within_threshold_area and within_threshold_x:
             # Publish zero velocities if all conditions are within thresholds
             self.linearx = 0.0
             self.lineary = 0.0
             self.angularz = 0.0
             self.publish_completed(True)
             self.get_logger().info(
-                "\033[93mAll conditions met, Stopping the robot\033[0m", once=True)
+                "\033[93mAll conditions met, Stopping the robot\033[0m",
+                throttle_duration_sec=1.5)
         else:
 
             # Apply control signals to Twist message, with threshold checks
-            self.linearx = -control_area if not within_threshold_area else 0.0
+            self.linearx = control_area if not within_threshold_area else 0.0
             self.lineary = 0.0  # Assuming no lateral movement control needed
-            self.angularz = -control_x if not within_threshold_x else 0.0
+            self.angularz = control_x if not within_threshold_x else 0.0
             self.publish_completed(False)
             self.get_logger().info(
                 "\033[92mPublishing control signals...\033[0m", throttle_duration_sec=2.5)
@@ -203,7 +216,7 @@ class ObjectTrackingNode(Node):
         twist_msg.linear.y = clip(
             lineary, -self.max_velocity, self.max_velocity)
         twist_msg.angular.z = clip(
-            angularz, -self.max_velocity, self.max_velocity)
+            angularz, -1.5, 1.5)
         self.publisher.publish(twist_msg)
 
     def sweep(self):
@@ -212,6 +225,7 @@ class ObjectTrackingNode(Node):
         self.lineary = 0.0
         self.linearz = 0.0
         self.angularz = self.sweep_angular_z
+        self.publish_twist(self.linearx, self.lineary, self.angularz)
 
         # Publish sweep command
         self.get_logger().info("Sweeping to find target object...", throttle_duration_sec=2.5)

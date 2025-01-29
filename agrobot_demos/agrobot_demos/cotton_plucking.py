@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from turtle import delay
 import rclpy
 from rclpy.node import Node
 import enum
@@ -171,6 +170,7 @@ class CottonPlucking(Node):
         to begin the cycle again if desired
         """
         self.sequence_index = 0
+        self.object_tracking_completed = False  # Critical reset
         self.current_state = RobotStates.START_TRACKING
         self.get_logger().info(
             "\033[92mRestarting tracking cycle...\033[0m")
