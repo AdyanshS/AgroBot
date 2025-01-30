@@ -72,6 +72,7 @@ class CottonPlucking(Node):
             self.get_logger().info(
                 "\033[92mEntered State: START_TRACKING\033[0m")
             # ? 2. Start object tracking
+            self.object_tracking_completed = False  # Reset flag here
             self.start_object_tracking()
 
             # Transition
@@ -82,9 +83,9 @@ class CottonPlucking(Node):
                 "\033[92mEntered State: TRACKING\033[0m", once=True)
 
             self.get_logger().info(
-                "\033[92mTracking object...\033[0m", throttle_duration_sec=2.5)
+                f"\033[92mTracking object...:{self.object_tracking_completed}\033[0m", throttle_duration_sec=2.0)
 
-            # ? 3. Wait until object tracking is completed
+            # ? 3. Wait 1until object tracking is completed
             if self.object_tracking_completed:
                 self.stop_object_tracking()  # Stop object tracking
                 self.SetCmdVel(0.0, 0.0, 0.0)  # Stop the robot
@@ -95,7 +96,7 @@ class CottonPlucking(Node):
 
         elif self.current_state == RobotStates.POST_TRACKING:
             self.get_logger().info(
-                "\033[92mEntered State: POST_TRACKING\033[0m")
+                "\033[92mEntered State: POST_TRACKING\033[0m", once=True)
             # ? Steps after tracking are managed by sequence steps and delay timer
             pass
 
@@ -111,8 +112,8 @@ class CottonPlucking(Node):
             (self.SetGripOpen, 0.5),
             (self.SetGripClose, 0.5),
             (self.SetClawFrontFacing, 1.0),
-            (self.move_robot_backwards, 1.0),
-            (self.stop_robot, 0.5),
+            (self.move_robot_backwards, 2.0),
+            (self.stop_robot, 1.0),
             (self.restart_tracking_cycle, 0.0)
         ]
 
@@ -154,11 +155,15 @@ class CottonPlucking(Node):
             self.delay_timer.cancel()
 
         self.delay_timer = self.create_timer(duration, self.delay_callback)
+        # self.get_logger().info(
+        #     f"\033[93mDelay timer Started: {self.delay_timer.is_ready()}\033[0m")
 
     def delay_callback(self):
         """ Callback to mark the end of the delay, then move to next step """
         self.delay_done = True
-        self.delay_timer.cancel()
+        self.delay_timer.destroy()
+        # self.get_logger().info(
+        #     f"\033[93mDelay timer canceled: {self.delay_timer.is_ready()}\033[0m")
         self.delay_timer = None
 
         # * Once the delay is done -> Schedule the next step
@@ -169,7 +174,6 @@ class CottonPlucking(Node):
         Reset the object tracking and got to START_TRACKING
         to begin the cycle again if desired
         """
-        self.sequence_index = 0
         self.object_tracking_completed = False  # Critical reset
         self.current_state = RobotStates.START_TRACKING
         self.get_logger().info(
@@ -263,6 +267,8 @@ class CottonPlucking(Node):
     def completed_tracking_callback(self, msg: Bool):
         """ Callback function for object tracking completed """
         self.object_tracking_completed = msg.data
+        self.get_logger().info(
+            f"\033[37mObject tracking completed msg received: {self.object_tracking_completed}\033[0m")
 
     # ----------------- Robot Vel Control Functions -----------------
     def SetCmdVel(self, linear_x, linear_y, angular_z):
