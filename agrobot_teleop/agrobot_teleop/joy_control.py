@@ -108,12 +108,12 @@ class JoyControl(Node):
         # Detect rising edge (0 -> 1) for the button
         if current_value == 1 and prev_value == 0:
             press_callback()
-            self.get_logger().info(f'{button_name} pressed')
+            # self.get_logger().info(f'{button_name} pressed')
 
         # Detect falling edge (1 -> 0) for the button
         if current_value == 0 and prev_value == 1 and release_callback:
             release_callback()
-            self.get_logger().info(f'{button_name} released')
+            # self.get_logger().info(f'{button_name} released')
 
     def handle_button_all(self, current_value, prev_value, button_name, callbacks: dict,
                           long_press_threshold=2.0, multi_click_threshold=0.7):
@@ -166,8 +166,8 @@ class JoyControl(Node):
             if press_duration >= long_press_threshold:
                 if 'long_press' in callbacks and not self.callback_invoked[button_name]:
                     callbacks['long_press']()  # Trigger long press callback
-                    self.get_logger().info(
-                        f"{button_name} long press detected")
+                    # self.get_logger().info(
+                    # f"{button_name} long press detected")
                     self.callback_invoked[button_name] = True
                 # Reset click count after long press
                 self.click_counts[button_name] = 0
@@ -185,17 +185,17 @@ class JoyControl(Node):
         if self.click_counts[button_name] == 1:
             if 'single_press' in callbacks:
                 callbacks['single_press']()  # Trigger single press event
-                self.get_logger().info(f"{button_name} single press detected")
+                # self.get_logger().info(f"{button_name} single press detected")
 
         elif self.click_counts[button_name] == 2:
             if 'double_click' in callbacks:
                 callbacks['double_click']()  # Trigger double click event
-                self.get_logger().info(f"{button_name} double click detected")
+                # self.get_logger().info(f"{button_name} double click detected")
 
         elif self.click_counts[button_name] == 3:
             if 'triple_click' in callbacks:
                 callbacks['triple_click']()  # Trigger triple click event
-                self.get_logger().info(f"{button_name} triple click detected")
+                # self.get_logger().info(f"{button_name} triple click detected")
 
         # Reset click count after processing
         self.click_counts[button_name] = 0
@@ -229,12 +229,12 @@ class JoyControl(Node):
         # Detect rising edge (0 -> 1) for the axis
         if current_value == 1 and prev_value == 0:
             positive_callback()
-            self.get_logger().info(f'{axis_name} positive pressed')
+            # self.get_logger().info(f'{axis_name} positive pressed')
 
         # Detect rising edge (0 -> -1) for the axis
         if current_value == -1 and prev_value == 0:
             negative_callback()
-            self.get_logger().info(f'{axis_name} negative pressed')
+            # self.get_logger().info(f'{axis_name} negative pressed')
 
     def joy_callback(self, msg: Joy):
         """ Callback function for the joystick subscriber """
