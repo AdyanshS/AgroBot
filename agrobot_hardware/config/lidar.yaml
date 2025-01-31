@@ -1,0 +1,39 @@
+rplidar_node_1:
+  ros__parameters:
+    angle_compensate: true 
+    auto_standby: false
+    channel_type: serial
+    flip_x_axis: true
+    frame_id: laser
+    inverted: false
+    # qos_overrides./parameter_events.publisher.depth:
+    # qos_overrides./parameter_events.publisher.durability:
+    # qos_overrides./parameter_events.publisher.history:
+    # qos_overrides./parameter_events.publisher.reliability:
+    scan_frequency: 10.0
+    scan_mode: Sensitivity
+    serial_baudrate: 256000
+    serial_port: /dev/lidar1
+    topic_name: /scan
+    use_sim_time: false
+
+
+scan_to_scan_filter_chain_1:
+  ros__parameters:
+    # filter1:
+    #   name: angle
+    #   type: laser_filters/LaserScanAngularBoundsFilter
+    #   params:
+    #     lower_angle: -2.355
+    #     upper_angle: 2.355
+      
+    filter1:
+      name: box_filter
+      type: laser_filters/LaserScanRangeFilter
+      params:
+        use_message_range_limits: false   # if not specified defaults to false
+        lower_threshold: 0.17              # if not specified defaults to 0.0
+        upper_threshold: 100.0          # if not specified defaults to 100000.0
+        lower_replacement_value: -.inf    # if not specified defaults to NaN
+        upper_replacement_value: .inf     # if not specified defaults to NaN
+      
