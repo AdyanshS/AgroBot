@@ -97,10 +97,10 @@ class ObjectDetectionYOLO(Node):
         center_y_to_track_points = []  # List to store center_y_to_track_points
 
         # Calculate the  line's x-coordinate
-        line_x = img.shape[1] // 2
+        line_x = img.shape[1] // 2 + 19
 
         # Camera Center
-        camera_center = (img.shape[1] // 2, img.shape[0] // 2)
+        camera_center = (img.shape[1] // 2 + 19, img.shape[0] // 2)
 
         # Loop through the results and store the bounding box and stores the results in the YoloResults message
         for result in results:
@@ -218,17 +218,17 @@ class ObjectDetectionYOLO(Node):
         yolo_result_msg.center_y_to_track.extend(center_y_to_track_points)
         yolo_result_msg.z_differences.extend(z_differences)
 
-        cv2.imshow('YOLOv11 Tracking', annotated_frame)
-        cv2.waitKey(1)
+        # cv2.imshow('YOLOv11 Tracking', annotated_frame)
+        # cv2.waitKey(1)
 
         # Convert the annotated image to a ROS message
-        # bridge = cv_bridge.CvBridge()
-        # annotated_frame_msg = bridge.cv2_to_compressed_imgmsg(
-        #     annotated_frame, dst_format='png')
+        bridge = cv_bridge.CvBridge()
+        annotated_frame_msg = bridge.cv2_to_compressed_imgmsg(
+            annotated_frame, dst_format='png')
 
         # Publish the results
         self.yolo_result_publisher.publish(yolo_result_msg)
-        # self.publisher.publish(annotated_frame_msg)
+        self.publisher.publish(annotated_frame_msg)
 
 
 def main(args=None):

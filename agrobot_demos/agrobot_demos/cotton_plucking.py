@@ -74,6 +74,9 @@ class CottonPlucking(Node):
             # ? 2. Start object tracking
             self.object_tracking_completed = False  # Reset flag here
             self.start_object_tracking()
+            self.start_object_tracking()
+            self.start_object_tracking()
+            self.start_object_tracking()
 
             # Transition
             self.current_state = RobotStates.TRACKING
@@ -105,16 +108,27 @@ class CottonPlucking(Node):
         Then start executing them via schedule_next_sequence_step.
         """
         self.sequence_steps = [
-            (self.SetArmExtended, 1.5),
-            (self.SetGripClose, 0.5),
+            (self.SetArmExtended, 2.0),
+            (self.SetGripClose, 1.0),
             (self.SetClawBackFacing, 1.0),
-            (self.SetArmRetracted, 1.5),
-            (self.SetGripOpen, 0.5),
-            (self.SetGripClose, 0.5),
+            (self.SetArmRetracted, 2.0),
+            (self.SetGripOpen, 1.0),
+            (self.SetGripClose, 1.0),
+            (self.SetClawFrontFacing, 1.0),
+            (self.SetGripOpen, 1.0),
+            (self.move_robot_backwards, 2.3),
+            (self.stop_robot, 1.0),
+            (self.SetArmExtended, 2.0),
+            (self.SetGripClose, 1.0),
+            (self.SetClawBackFacing, 1.0),
+            (self.SetArmRetracted, 2.0),
+            (self.SetGripOpen, 1.0),
+            (self.SetGripClose, 1.0),
             (self.SetClawFrontFacing, 1.0),
             (self.move_robot_backwards, 2.0),
             (self.stop_robot, 1.0),
-            (self.restart_tracking_cycle, 0.0)
+
+            # (self.restart_tracking_cycle, 0.0)
         ]
 
         self.sequence_index = 0
@@ -268,7 +282,7 @@ class CottonPlucking(Node):
         """ Callback function for object tracking completed """
         self.object_tracking_completed = msg.data
         self.get_logger().info(
-            f"\033[37mObject tracking completed msg received: {self.object_tracking_completed}\033[0m")
+            f"\033[37mObject tracking completed msg received: {self.object_tracking_completed}\033[0m", once=True)
 
     # ----------------- Robot Vel Control Functions -----------------
     def SetCmdVel(self, linear_x, linear_y, angular_z):
@@ -288,7 +302,7 @@ class CottonPlucking(Node):
     def move_robot_backwards(self):
         """ Move the robot backwards """
         self.get_logger().info("\033[91mMoving robot backwards...\033[0m")
-        self.SetCmdVel(-0.1, 0.0, 0.0)
+        self.SetCmdVel(0.0, 0.1, 0.0)
 
     def stop_robot(self):
         """ Stop the robot """
