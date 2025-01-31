@@ -59,4 +59,9 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  ${PROJECT_NAME}/imu_driver.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
