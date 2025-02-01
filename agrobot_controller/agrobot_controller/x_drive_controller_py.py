@@ -73,7 +73,7 @@ class XDriveController(Node):
 
         # Create Parameter
         self.declare_parameter("debug", False)
-        self.declare_parameter("publish_tf", True)
+        self.declare_parameter("publish_tf", False)
 
         self.debug = self.get_parameter("debug").value
         self.publish_tf = self.get_parameter("publish_tf").value

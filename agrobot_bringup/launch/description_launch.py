@@ -84,5 +84,8 @@ def generate_launch_description():
 
     ld.add_action(odom_static_tf)
     ld.add_action(laser_static_tf)
+    ld.add_action(imu_static_tf)
+    ld.add_action(base_footprint_static_tf)
+    ld.add_action(map_static_tf)
 
     return ld

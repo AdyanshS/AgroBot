@@ -24,10 +24,18 @@ def generate_launch_description():
         output='screen'
     )
 
+    imu_driver_node = Node(
+        package='agrobot_hardware',
+        executable='imu_driver.py',
+        name='bno080_driver',
+        output='screen'
+    )
+
     ld = LaunchDescription()
 
     # Nodes
     ld.add_action(lift_motor_control)
     ld.add_action(servo_control)
+    ld.add_action(imu_driver_node)
 
     return ld

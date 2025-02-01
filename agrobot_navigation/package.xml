@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>agrobot_localization</name>
+  <name>agrobot_navigation</name>
   <version>0.0.0</version>
-  <description>Localization package for ekfs, mapping,etc.</description>
+  <description>Package which will contain configuration for Nav2 Stack and their scripts</description>
   <maintainer email="gupta.adyansh@gmail.com">Adyansh Gupta</maintainer>
   <license>Apache-2.0</license>
 

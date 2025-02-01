@@ -1,4 +1,5 @@
 import os
+from agrobot_bringup.launch import description_launch
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
@@ -30,6 +31,8 @@ def generate_launch_description():
         agrobot_bringup_pkg_dir, 'launch', 'base_launch.py')
     vision_tracking_launch_file = os.path.join(
         agrobot_bringup_pkg_dir, 'launch', 'vision_tracking_launch.py')
+    description_launch_file = os.path.join(
+        agrobot_bringup_pkg_dir, 'launch', 'description_launch.py')
 
     # Include Launch Description
     actuator_launch = IncludeLaunchDescription(
@@ -38,6 +41,8 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(base_launch_file))
     vision_tracking_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(vision_tracking_launch_file))
+    description_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(description_launch_file))
 
     ld = LaunchDescription()
     # Arguments
@@ -45,6 +50,7 @@ def generate_launch_description():
     # Launch Files
     ld.add_action(actuator_launch)
     ld.add_action(base_launch)
-    ld.add_action(vision_tracking_launch)
+    # ld.add_action(vision_tracking_launch)
+    ld.add_action(description_launch)
 
     return ld

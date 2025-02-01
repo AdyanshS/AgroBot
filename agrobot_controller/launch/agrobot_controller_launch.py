@@ -6,11 +6,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    config = os.path.join(
-        get_package_share_directory('agrobot_controller'),
-        'config',
-        'agrobot_controller_params.yaml',
-    )
 
     wheel_speed_control = Node(
         package='agrobot_controller',
