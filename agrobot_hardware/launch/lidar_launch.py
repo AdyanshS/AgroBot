@@ -54,6 +54,6 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     ld.add_action(lidar_node)
-    # ld.add_action(laser_filter)
+    ld.add_action(laser_filter)
 
     return ld

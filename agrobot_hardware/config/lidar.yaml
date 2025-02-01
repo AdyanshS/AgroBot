@@ -20,6 +20,16 @@ rplidar_node_1:
 
 scan_to_scan_filter_chain_1:
   ros__parameters:
+    filter1:
+        name: box_filter
+        type: laser_filters/LaserScanRangeFilter
+        params:
+          use_message_range_limits: false   # if not specified defaults to false
+          lower_threshold: 0.17              # if not specified defaults to 0.0
+          upper_threshold: 100.0          # if not specified defaults to 100000.0
+          lower_replacement_value: -.inf    # if not specified defaults to NaN
+          upper_replacement_value: .inf     # if not specified defaults to NaN
+        
     # filter1:
     #   name: angle
     #   type: laser_filters/LaserScanAngularBoundsFilter
@@ -27,13 +37,4 @@ scan_to_scan_filter_chain_1:
     #     lower_angle: -2.355
     #     upper_angle: 2.355
       
-    filter1:
-      name: box_filter
-      type: laser_filters/LaserScanRangeFilter
-      params:
-        use_message_range_limits: false   # if not specified defaults to false
-        lower_threshold: 0.17              # if not specified defaults to 0.0
-        upper_threshold: 100.0          # if not specified defaults to 100000.0
-        lower_replacement_value: -.inf    # if not specified defaults to NaN
-        upper_replacement_value: .inf     # if not specified defaults to NaN
-      
+    
