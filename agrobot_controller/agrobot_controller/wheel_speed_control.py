@@ -14,7 +14,7 @@ MIN_PWM = 0
 MAX_PWM = 100
 MAX_RPM = 112  # Maximum motor RPM (found in motor datasheet)
 # Found this value after sending 100pwm to the motor and measuring the angular velocity
-MAX_ANGULAR_VEL = 8.2
+MAX_ANGULAR_VEL = 11.728613
 
 
 class WheelSpeedControl(Node):
@@ -43,8 +43,9 @@ class WheelSpeedControl(Node):
         # . Publishers
         self.motor_pwm_pub_ = self.create_publisher(
             MotorPWMs, "motor_pwm", 10)
-        self.error_pub_ = self.create_publisher(
-            PIDWheelError, "wheel_speed_errors", 10)
+        if self.debug:
+            self.error_pub_ = self.create_publisher(
+                PIDWheelError, "wheel_speed_errors", 10)
         self.wheel_ang_vel_pub_ = self.create_publisher(
             WheelAngularVel, "wheel_angular_vel/feedback", 10)
 
@@ -78,11 +79,12 @@ class WheelSpeedControl(Node):
             )
 
     def encoder_pulses_callback(self, msg: EncoderPulses):
+        # TODO: Invert the encoder pins definitions in the ESP32 Code.
         self.encoder_counts_ = [
-            msg.encoder_1_pulse,
-            msg.encoder_2_pulse,
-            msg.encoder_3_pulse,
-            msg.encoder_4_pulse
+            - msg.encoder_1_pulse,
+            - msg.encoder_2_pulse,
+            - msg.encoder_3_pulse,
+            - msg.encoder_4_pulse
         ]
 
         if self.debug:
@@ -103,7 +105,8 @@ class WheelSpeedControl(Node):
                 i] = alpha * self.actual_wheel_speed_[i] + (1 - alpha) * new_speed
 
             setattr(angular_vel_msg,
-                    f'wheel_{i+1}_angular_vel', self.actual_wheel_speed_[i])
+                    f'wheel_{i+1}_angular_vel',
+                    round(self.actual_wheel_speed_[i], 4))
 
             if self.debug:
                 self.get_logger().error(

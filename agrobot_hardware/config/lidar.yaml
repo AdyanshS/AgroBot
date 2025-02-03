@@ -14,7 +14,7 @@ rplidar_node_1:
     scan_mode: Sensitivity
     serial_baudrate: 256000
     serial_port: /dev/lidar1
-    topic_name: /scan
+    topic_name: /scan/unfiltered
     use_sim_time: false
 
 

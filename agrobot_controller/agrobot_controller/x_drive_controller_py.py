@@ -178,8 +178,8 @@ class XDriveController(Node):
 
         # Pseudo Inverse Transformation Matrix
         T_inv = np.array([
-            [-1/self.robot_radius, -1/self.robot_radius, -
-                1/self.robot_radius, -1/self.robot_radius],
+            [-1/self.robot_radius, -1/self.robot_radius,
+             -1/self.robot_radius, -1/self.robot_radius],
             [ROOT2, ROOT2, -ROOT2, -ROOT2],
             [-ROOT2, ROOT2, ROOT2, -ROOT2]
         ])

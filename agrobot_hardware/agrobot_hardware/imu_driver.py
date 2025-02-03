@@ -29,6 +29,8 @@ from adafruit_bno08x import (
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
     BNO_REPORT_ROTATION_VECTOR,
+    BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR
+
 )
 from adafruit_bno08x.i2c import BNO08X_I2C
 
@@ -38,10 +40,13 @@ class BNO08xNode(Node):
         super().__init__('bno08x')
 
         # Publisher for IMU data
-        self.raw_pub = self.create_publisher(Imu, 'imu/data', 10)
+        self.raw_pub = self.create_publisher(
+            Imu, 'imu/data', 10)
         # Uncomment if needed:
-        # self.mag_pub = self.create_publisher(MagneticField, 'bno08x/mag', 10)
-        # self.status_pub = self.create_publisher(DiagnosticStatus, 'bno08x/status', 10)
+        self.mag_pub = self.create_publisher(
+            MagneticField, 'bno08x/mag', 10)
+        self.status_pub = self.create_publisher(
+            DiagnosticStatus, 'bno08x/status', 10)
 
         # Transform broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -62,6 +67,10 @@ class BNO08xNode(Node):
         self.bno.enable_feature(BNO_REPORT_GYROSCOPE)
         self.bno.enable_feature(BNO_REPORT_MAGNETOMETER)
         self.bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
+        # self.bno.enable_feature(BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR)
+
+        # self.bno.begin_calibration()
+        # print(self.bno.calibration_status)
 
         # Timer to run at 170Hz (0.005882353)
         self.timer = self.create_timer(0.00588, self.run)
@@ -70,7 +79,7 @@ class BNO08xNode(Node):
         raw_msg = Imu()
         raw_msg.header.stamp = self.get_clock().now().to_msg()
         raw_msg.header.frame_id = 'base_link'
-
+        # self.bno.
         # Read acceleration data
         accel_x, accel_y, accel_z = self.bno.acceleration
         raw_msg.linear_acceleration.x = accel_x
@@ -85,6 +94,8 @@ class BNO08xNode(Node):
 
         # Read quaternion data
         quat_i, quat_j, quat_k, quat_real = self.bno.quaternion
+        # quat_i, quat_j, quat_k, quat_real = self.bno.geomagnetic_quaternion
+
         raw_msg.orientation.w = quat_real
         raw_msg.orientation.x = quat_i
         raw_msg.orientation.y = quat_j
@@ -108,20 +119,20 @@ class BNO08xNode(Node):
         self.tf_broadcaster.sendTransform(t)
 
         # Uncomment if you want to publish the magnetic field and status messages
-        # mag_msg = MagneticField()
-        # mag_x, mag_y, mag_z = self.bno.magnetic
-        # mag_msg.header.stamp = self.get_clock().now().to_msg()
-        # mag_msg.magnetic_field.x = mag_x
-        # mag_msg.magnetic_field.y = mag_y
-        # mag_msg.magnetic_field.z = mag_z
-        # mag_msg.magnetic_field_covariance[0] = -1
-        # self.mag_pub.publish(mag_msg)
+        mag_msg = MagneticField()
+        mag_x, mag_y, mag_z = self.bno.magnetic
+        mag_msg.header.stamp = self.get_clock().now().to_msg()
+        mag_msg.magnetic_field.x = mag_x
+        mag_msg.magnetic_field.y = mag_y
+        mag_msg.magnetic_field.z = mag_z
+        mag_msg.magnetic_field_covariance[0] = -1
+        self.mag_pub.publish(mag_msg)
 
-        # status_msg = DiagnosticStatus()
-        # status_msg.level = bytes([0])
-        # status_msg.name = "bno08x IMU"
-        # status_msg.message = ""
-        # self.status_pub.publish(status_msg)
+        status_msg = DiagnosticStatus()
+        status_msg.level = bytes([0])
+        status_msg.name = "bno08x IMU"
+        status_msg.message = ""
+        self.status_pub.publish(status_msg)
 
     def shutdown(self):
         self.get_logger().info('bno08x node finished')
