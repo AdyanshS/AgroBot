@@ -21,7 +21,8 @@ class ObjectDetectionYOLO(Node):
 
         self.declare_parameter('use_compressed_image', False)
         self.declare_parameter('show_image', True)
-        self.declare_parameter('model_name', 'cotton_plant_model_jetson.engine')
+        self.declare_parameter(
+            'model_name', 'cotton_plant_model_jetson.engine')
         self.declare_parameter('iou', 0.3)
         self.declare_parameter('conf', 0.3)
 
@@ -59,18 +60,25 @@ class ObjectDetectionYOLO(Node):
             10
         )
 
-        # self.model = YOLO(
-        #     f'/home/sr09/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}')
         self.model = YOLO(
-            f'/home/sakar1/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}'
-        )
+            f'/home/sr09/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}')
+        # self.model = YOLO(
+        # f'/home/sakar1/agrobot_ws/src/agrobot_vision/agrobot_vision/model/{self.model_name}'
+        # )
 
         # Set the IOU and Confidence threshold
         self.iou = self.get_parameter('iou').value
         self.conf = self.get_parameter('conf').value
 
+    def adjust_brightness_contrast(self, image, brightness=0, contrast=0):
+        # brightness in [-100, 100], contrast in [-100, 100]
+        alpha = 1.0 + (contrast / 100.0)  # Contrast control
+        beta = brightness               # Brightness control
+        adjusted = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
+        return adjusted
+
     def image_callback(self, msg):
-        self.get_logger().info('Receiving image', throttle_duration_sec=3.0)
+        # self.get_logger().info('Receiving image', throttle_duration_sec=3.0)
 
         # Convert ROS Image message to OpenCV image
         bridge = cv_bridge.CvBridge()
@@ -78,9 +86,14 @@ class ObjectDetectionYOLO(Node):
             # Convert compressed image to OpenCV image
             img = bridge.compressed_imgmsg_to_cv2(
                 msg, desired_encoding='bgr8')
+
         else:
             # Convert image to OpenCV image
             img = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+        # Adjust the brightness and contrast
+        img = self.adjust_brightness_contrast(
+            img, brightness=-20, contrast=-20)
 
         self.yolo_object_detect(img)
 

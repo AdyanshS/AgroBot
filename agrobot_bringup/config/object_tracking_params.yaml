@@ -2,7 +2,8 @@ yolo_results:
   ros__parameters:
     use_compressed_image: False
     show_image: True
-    model_name: 'cotton_plant_model_jetson.engine'
+    # model_name: 'cotton_plant_model.engine'
+    model_name: 'new_model.pt'
     iou: 0.3
     conf: 0.3
 

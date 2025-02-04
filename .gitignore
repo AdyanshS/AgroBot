@@ -7,4 +7,6 @@ agrobot_firmware_s3/lib/README
 agrobot_firmware_s3/test/README
 agrobot_firmware_s3/.**
 agrobot_vision/agrobot_vision/dataset/
+agrobot_vision/agrobot_vision/dataset_2/
+
 Log/OrbbecSDK.log.txt
