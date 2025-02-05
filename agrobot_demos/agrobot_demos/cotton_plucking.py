@@ -115,16 +115,16 @@ class CottonPlucking(Node):
             (self.SetGripOpen, 1.0),
             (self.SetGripClose, 1.0),
             (self.SetClawFrontFacing, 1.0),
-            (self.SetGripOpen, 1.0),
-            (self.move_robot_backwards, 2.3),
-            (self.stop_robot, 1.0),
-            (self.SetArmExtended, 2.0),
-            (self.SetGripClose, 1.0),
-            (self.SetClawBackFacing, 1.0),
-            (self.SetArmRetracted, 2.0),
-            (self.SetGripOpen, 1.0),
-            (self.SetGripClose, 1.0),
-            (self.SetClawFrontFacing, 1.0),
+            # (self.SetGripOpen, 1.0),
+            # (self.move_robot_backwards, 2.3),
+            # (self.stop_robot, 1.0),
+            # (self.SetArmExtended, 2.0),
+            # (self.SetGripClose, 1.0),
+            # (self.SetClawBackFacing, 1.0),
+            # (self.SetArmRetracted, 2.0),
+            # (self.SetGripOpen, 1.0),
+            # (self.SetGripClose, 1.0),
+            # (self.SetClawFrontFacing, 1.0),
             (self.move_robot_backwards, 2.0),
             (self.stop_robot, 1.0),
 
@@ -246,7 +246,7 @@ class CottonPlucking(Node):
     def SetArmRetracted(self):
         """ Set the arm to retracted position """
         msg = Float32()
-        msg.data = 180.0
+        msg.data = 225.0  # 180.0
         self.arm_publisher.publish(msg)
         self.get_logger().info("\033[36mArm set to retracted position.\033[0m")
 

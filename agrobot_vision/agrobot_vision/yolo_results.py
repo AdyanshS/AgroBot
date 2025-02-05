@@ -93,7 +93,7 @@ class ObjectDetectionYOLO(Node):
 
         # Adjust the brightness and contrast
         img = self.adjust_brightness_contrast(
-            img, brightness=-20, contrast=-20)
+            img, brightness=-25, contrast=-25)
 
         self.yolo_object_detect(img)
 

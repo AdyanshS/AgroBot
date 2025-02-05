@@ -15,22 +15,22 @@ class ObjectTrackingNode(Node):
         super().__init__('object_tracking')
 
         # Declare parameters for desired values and PID coefficients
-        self.declare_parameter('desired_contour_area', 2700)
+        self.declare_parameter('desired_contour_area', 15000)
         self.declare_parameter('desired_x_difference', 0)
         self.declare_parameter('desired_z_difference', 0)
 
-        self.declare_parameter('kp_area', 0.0004)
+        self.declare_parameter('kp_area', 0.00005)
         self.declare_parameter('ki_area', 0.0)
         self.declare_parameter('kd_area', 0.0)
 
-        self.declare_parameter('kp_x', 0.005)
-        self.declare_parameter('ki_x', 0.0001)
-        self.declare_parameter('kd_x', 0.001)
+        self.declare_parameter('kp_x', 0.002)
+        self.declare_parameter('ki_x', 0.000)
+        self.declare_parameter('kd_x', 0.00)
 
         self.declare_parameter('kp_z', 0.1)
         self.declare_parameter('ki_z', 0.0001)
         self.declare_parameter('kd_z', 0.001)
-        self.declare_parameter('threshold_area', 300)
+        self.declare_parameter('threshold_area', 400)
         self.declare_parameter('threshold_x', 5)
         self.declare_parameter('threshold_z', 0)
         self.declare_parameter('target_class_id', 0)  # Class ID to track
@@ -108,11 +108,13 @@ class ObjectTrackingNode(Node):
         self.completed_publisher = self.create_publisher(
             Bool, 'object_tracking_completed', 10)
 
-        self.do_tracking = True
+        self.do_tracking = False
 
         self.get_logger().info("Object Tracking Node Initialized.")
 
     def tracking_callback(self, msg: Bool):
+        self.get_logger().info(
+            f"Tracking Command Received: {msg.data}")
         self.do_tracking = msg.data
 
     def yolo_callback(self, msg: YoloResults):

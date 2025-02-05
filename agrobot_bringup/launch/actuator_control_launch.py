@@ -48,7 +48,7 @@ def generate_launch_description():
     # Nodes
     ld.add_action(lift_motor_control)
     ld.add_action(servo_control)
-    ld.add_action(imu_driver_node)
-    ld.add_action(lidar_launch)
+    # ld.add_action(imu_driver_node)
+    # ld.add_action(lidar_launch)
 
     return ld

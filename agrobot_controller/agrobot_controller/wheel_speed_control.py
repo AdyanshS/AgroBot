@@ -92,26 +92,44 @@ class WheelSpeedControl(Node):
                 f"Encoder Pulses: {self.encoder_counts_[0]}, {self.encoder_counts_[1]}, {self.encoder_counts_[2]}, {self.encoder_counts_[3]}"
             )
 
-    def calculate_wheel_speeds(self, dt: float):
-        alpha = self.get_parameter("alpha").value
+    # def calculate_wheel_speeds(self, dt: float):
+    #     alpha = self.get_parameter("alpha").value
 
+    #     angular_vel_msg = WheelAngularVel()
+    #     for i in range(4):
+    #         delta_ticks = self.encoder_counts_[i] - \
+    #             self.previous_encoder_counts_[i]
+    #         new_speed = (
+    #             delta_ticks / self.encoder_ticks_per_rev) * (2 * pi) / dt
+    #         self.actual_wheel_speed_[
+    #             i] = alpha * self.actual_wheel_speed_[i] + (1 - alpha) * new_speed
+
+    #         setattr(angular_vel_msg,
+    #                 f'wheel_{i+1}_angular_vel',
+    #                 round(self.actual_wheel_speed_[i], 4))
+
+    #         if self.debug:
+    #             self.get_logger().error(
+    #                 f"Wheel {i+1} ACTUAL Speed: {self.actual_wheel_speed_[i]}"
+    #             )
+
+    #     self.wheel_ang_vel_pub_.publish(angular_vel_msg)
+
+    def calculate_wheel_speeds(self, dt: float):
         angular_vel_msg = WheelAngularVel()
         for i in range(4):
-            delta_ticks = self.encoder_counts_[i] - \
-                self.previous_encoder_counts_[i]
+            delta_ticks = self.encoder_counts_[
+                i] - self.previous_encoder_counts_[i]
+            # Calculate new speed without low pass filter
             new_speed = (
                 delta_ticks / self.encoder_ticks_per_rev) * (2 * pi) / dt
-            self.actual_wheel_speed_[
-                i] = alpha * self.actual_wheel_speed_[i] + (1 - alpha) * new_speed
 
             setattr(angular_vel_msg,
-                    f'wheel_{i+1}_angular_vel',
-                    round(self.actual_wheel_speed_[i], 4))
+                    f'wheel_{i+1}_angular_vel', round(new_speed, 4))
 
             if self.debug:
                 self.get_logger().error(
-                    f"Wheel {i+1} ACTUAL Speed: {self.actual_wheel_speed_[i]}"
-                )
+                    f"Wheel {i+1} ACTUAL Speed: {new_speed}")
 
         self.wheel_ang_vel_pub_.publish(angular_vel_msg)
 
